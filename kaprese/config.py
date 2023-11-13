@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import json
 from pathlib import Path
-from typing import Optional, TypedDict, Union
+from typing import Callable, Concatenate, Optional, TypedDict, Union
 
 from kaprese.utils.design import Singleton
 
@@ -16,6 +18,17 @@ KEYS = [
     "CONFIG_PATH",
     *SETTABLE_KEYS,
 ]
+
+
+def _config_path_guard[
+    T, **P
+](func: Callable[Concatenate[_Configure, P], T]) -> Callable[Concatenate[_Configure, P], T]:
+    def wrapper(self: _Configure, *args: P.args, **kwargs: P.kwargs) -> T:
+        if not self.CONFIG_PATH.exists():
+            self.CONFIG_PATH.mkdir(parents=True)
+        return func(self, *args, **kwargs)
+
+    return wrapper
 
 
 class _Configure(metaclass=Singleton):
@@ -45,6 +58,7 @@ class _Configure(metaclass=Singleton):
             config.update(json.loads(self._docker_config_path.read_text()))
         self._docker_sock_path = config.get("DOCKER_SOCK_PATH")
 
+    @_config_path_guard
     def _write_docker_config(self) -> None:
         config = _DOCKER_CONFIG_TYPE(
             DOCKER_SOCK_PATH=self._docker_sock_path,
