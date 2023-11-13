@@ -40,7 +40,7 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
         table.add_column("name", justify="left")
         table.add_column("language", justify="left")
         table.add_column("image", justify="left")
-        table.add_column("avalability", justify="left")
+        table.add_column("availability", justify="left")
 
         for benchmark in all_benchmarks():
             if not args.all and not benchmark.availability:
