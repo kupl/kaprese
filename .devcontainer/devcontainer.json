@@ -37,5 +37,5 @@
             }
         }
     },
-    "postCreateCommand": "sudo pip install -e \".[dev,test]\""
+    "postCreateCommand": "sudo pip install -e \".[dev,test]\" && mkdir -p .kaprese && ln -s $(pwd)/.kaprese ~/.kaprese"
 }

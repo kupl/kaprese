@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from rich.table import Table
 
-from kaprese.config import CONFIGURE, KEYS, SETTABLE_KEYS
+from kaprese.core.config import CONFIGURE, KEYS, SETTABLE_KEYS
 from kaprese.utils.console import console
 from kaprese.utils.logging import logger
 

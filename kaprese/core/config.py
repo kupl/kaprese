@@ -12,15 +12,6 @@ class _DOCKER_CONFIG_TYPE(TypedDict):
     DOCKER_SOCK_PATH: Optional[str]
 
 
-SETTABLE_KEYS = [
-    "DOCKER_SOCK_PATH",
-]
-KEYS = [
-    "CONFIG_PATH",
-    *SETTABLE_KEYS,
-]
-
-
 def _config_path_guard[
     T, **P
 ](func: Callable[Concatenate[_Configure, P], T]) -> Callable[
@@ -74,7 +65,7 @@ class _Configure(metaclass=Singleton):
 
     @property
     def DOCKER_SOCK_PATH(self) -> Optional[str]:
-        """Path to docker socket (default="/var/run/docker.sock")"""
+        """Path to docker socket (default="unix://var/run/docker.sock")"""
         return self._docker_sock_path
 
     @DOCKER_SOCK_PATH.setter
@@ -92,5 +83,13 @@ class _Configure(metaclass=Singleton):
     def __init__(self) -> None:
         self._reload()
 
+
+SETTABLE_KEYS = [
+    "DOCKER_SOCK_PATH",
+]
+KEYS = [
+    "CONFIG_PATH",
+    *SETTABLE_KEYS,
+]
 
 CONFIGURE = _Configure()
