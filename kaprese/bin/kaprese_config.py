@@ -6,6 +6,7 @@ from rich.table import Table
 
 from kaprese.config import CONFIGURE, KEYS, SETTABLE_KEYS
 from kaprese.utils.console import console
+from kaprese.utils.logging import logger
 
 
 def main(
@@ -29,7 +30,8 @@ def main(
         for setup in args.setup:
             key, value = setup.split("=")
             if key not in SETTABLE_KEYS:
-                raise ValueError(f"Invalid key: {key}")
+                logger.warning(f"Invalid key: {key} ({value}, ignored)")
+                continue
             setattr(CONFIGURE, key, value)
 
     elif args.subcommand == "show":
