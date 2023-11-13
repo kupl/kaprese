@@ -11,7 +11,8 @@
             "username": "automatic",
             "userUid": "automatic",
             "userGid": "automatic"
-        }
+        },
+        "ghcr.io/devcontainers/features/docker-outside-of-docker": {}
     },
     "customizations": {
         "vscode": {
@@ -24,10 +25,14 @@
             ],
             "settings": {
                 "python.languageServer": "Pylance",
+                "python.analysis.typeCheckingMode": "strict",
                 "python.analysis.autoImportCompletions": true,
                 "[python]": {
                     "editor.defaultFormatter": "ms-python.black-formatter",
-                    "editor.formatOnSave": true
+                    "editor.formatOnSave": true,
+                    "editor.codeActionsOnSave": {
+                        "source.organizeImports": true
+                    }
                 }
             }
         }
