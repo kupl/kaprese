@@ -1,6 +1,6 @@
 {
     "name": "kaprese",
-    "image": "mcr.microsoft.com/devcontainers/python:1-3.8-bullseye",
+    "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bullseye",
     "features": {
         "ghcr.io/devcontainers/features/common-utils:2": {
             "installZsh": true,
