@@ -16,6 +16,7 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
+    "docker>=6",
     "rich>=13"
 ]
 
