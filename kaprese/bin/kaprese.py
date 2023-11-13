@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from kaprese import __version__
-from kaprese.config import CONFIGURE
+from kaprese.core.config import CONFIGURE
 
 
 def main(argv: Optional[List[str]] = None) -> None:
@@ -26,6 +26,9 @@ def main(argv: Optional[List[str]] = None) -> None:
 
     subparsers = parser.add_subparsers(dest="subcommand", metavar="<command>")
     subparsers.add_parser("config", add_help=False, help="configure kaprese")
+    subparsers.add_parser(
+        "benchmark", add_help=False, help="benchmark related commands"
+    )
 
     args, remainder = parser.parse_known_args(argv)
 
@@ -34,6 +37,11 @@ def main(argv: Optional[List[str]] = None) -> None:
 
     if args.subcommand == "config":
         from kaprese.bin.kaprese_config import main
+
+        main(remainder, args=args)
+
+    elif args.subcommand == "benchmark":
+        from kaprese.bin.kaprese_benchmark import main
 
         main(remainder, args=args)
 
