@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 from kaprese.core.config import CONFIGURE
+from kaprese.utils.docker import find_image
 from kaprese.utils.logging import logger
 
 
@@ -18,7 +19,7 @@ class Benchmark:
 
     @property
     def availability(self) -> bool:
-        return False
+        return find_image(self.image) is not None
 
     def register(self, *, overwrite: bool = False) -> None:
         benchmarks_dir = _get_benchmark_path()
