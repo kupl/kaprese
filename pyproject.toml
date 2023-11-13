@@ -38,4 +38,3 @@ path = "kaprese/__init__.py"
 
 [project.scripts]
 kaprese = "kaprese.bin.kaprese:main"
-kaprese-config = "kaprese.bin.kaprese_config:main"

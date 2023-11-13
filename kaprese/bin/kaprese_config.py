@@ -11,10 +11,7 @@ from kaprese.utils.console import console
 def main(
     argv: Optional[List[str]] = None, *, args: Optional[argparse.Namespace] = None
 ) -> None:
-    if argv is None:
-        argv = sys.argv[1:]
-
-    parser = argparse.ArgumentParser(prog="kaprese-config")
+    parser = argparse.ArgumentParser(prog="kaprese config")
     subparsers = parser.add_subparsers(dest="subcommand", metavar="<command>")
 
     show_parser = subparsers.add_parser("show", help="show configuration")
