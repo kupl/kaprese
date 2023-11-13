@@ -22,6 +22,9 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
 
     preset_parser = subparsers.add_parser("preset", help="add preset benchmarks")
     preset_parser.add_argument(
+        "--overwrite", action="store_true", help="overwrite existing benchmarks"
+    )
+    preset_parser.add_argument(
         "preset",
         nargs="*",
         choices=["all", "ocaml", "c"],
@@ -52,14 +55,14 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
         console.print(table)
 
     elif args.subcommand == "preset":
-        registers: list[Callable[[], None]] = []
+        registers: list[Callable[[bool], None]] = []
         if "ocaml" in args.preset or "all" in args.preset:
             registers.append(register_ocaml_benchmarks)
         if "c" in args.preset or "all" in args.preset:
             registers.append(register_c_benchmarks)
 
         for register in registers:
-            register()
+            register(args.overwrite)
 
     else:
         parser.print_help()

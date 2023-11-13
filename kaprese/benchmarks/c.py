@@ -1,7 +1,7 @@
 from kaprese.core.benchmark import Benchmark
 
 
-def register_benchmarks() -> None:
+def register_benchmarks(overwrite: bool = False) -> None:
     flexs = [
         Benchmark(
             f"flex-{i}",
@@ -24,4 +24,4 @@ def register_benchmarks() -> None:
     ]
 
     for bench in [*flexs, *flints, *spearmints]:
-        bench.register()
+        bench.register(overwrite=overwrite)

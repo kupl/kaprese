@@ -1,7 +1,7 @@
 from kaprese.core.benchmark import Benchmark
 
 
-def register_benchmarks() -> None:
+def register_benchmarks(overwrite: bool = False) -> None:
     formulas = [
         Benchmark(
             f"formula-{i}",
@@ -26,4 +26,4 @@ def register_benchmarks() -> None:
     ]
 
     for bench in [*formulas, *diffs, *lambdas]:
-        bench.register()
+        bench.register(overwrite=overwrite)
