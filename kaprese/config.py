@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Optional, TypedDict
+from typing import Optional, TypedDict, Union
 
 from kaprese.utils.design import Singleton
 
@@ -9,9 +9,12 @@ class _DOCKER_CONFIG_TYPE(TypedDict):
     DOCKER_SOCK_PATH: Optional[str]
 
 
+SETTABLE_KEYS = [
+    "DOCKER_SOCK_PATH",
+]
 KEYS = [
     "CONFIG_PATH",
-    "DOCKER_SOCK_PATH",
+    *SETTABLE_KEYS,
 ]
 
 
@@ -25,7 +28,8 @@ class _Configure(metaclass=Singleton):
         return self._config_path
 
     @CONFIG_PATH.setter
-    def CONFIG_PATH(self, value: Path) -> None:
+    def CONFIG_PATH(self, value: Union[Path, str]) -> None:
+        value = Path(value)
         self._config_path = value
         self._reload()
 
