@@ -24,9 +24,7 @@ def main(argv: Optional[List[str]] = None) -> None:
         help="path to kaprese config directory (default=~/.kaprese)",
     )
 
-    subparsers = parser.add_subparsers(
-        dest="subcommand", required=True, metavar="<command>"
-    )
+    subparsers = parser.add_subparsers(dest="subcommand", metavar="<command>")
     subparsers.add_parser("config", add_help=False, help="configure kaprese")
 
     args, remainder = parser.parse_known_args(argv)
@@ -38,3 +36,7 @@ def main(argv: Optional[List[str]] = None) -> None:
         from kaprese.bin.kaprese_config import main
 
         main(remainder, args=args)
+
+    else:
+        parser.print_help()
+        sys.exit(1)

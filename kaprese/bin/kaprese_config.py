@@ -48,3 +48,7 @@ def main(
                     getattr(CONFIGURE.__class__, key).__doc__,
                 )
         console.print(table)
+
+    else:
+        parser.print_help()
+        sys.exit(1)
