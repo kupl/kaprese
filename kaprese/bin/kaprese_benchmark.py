@@ -1,8 +1,11 @@
 import argparse
 import sys
+from typing import Callable
 
 from rich.table import Table
 
+from kaprese.benchmarks.c import register_benchmarks as register_c_benchmarks
+from kaprese.benchmarks.ocaml import register_benchmarks as register_ocaml_benchmarks
 from kaprese.core.benchmark import all_benchmarks
 from kaprese.utils.console import console
 
@@ -15,6 +18,14 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
     list_parser = subparsers.add_parser("list", help="list benchmarks")
     list_parser.add_argument(
         "-a", "--all", action="store_true", help="list all benchmarks"
+    )
+
+    preset_parser = subparsers.add_parser("preset", help="add preset benchmarks")
+    preset_parser.add_argument(
+        "preset",
+        nargs="*",
+        choices=["all", "ocaml", "c"],
+        help="preset benchmarks to add",
     )
 
     # Branching to pass type checking
@@ -39,6 +50,16 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
             )
 
         console.print(table)
+
+    elif args.subcommand == "preset":
+        registers: list[Callable[[], None]] = []
+        if "ocaml" in args.preset or "all" in args.preset:
+            registers.append(register_ocaml_benchmarks)
+        if "c" in args.preset or "all" in args.preset:
+            registers.append(register_c_benchmarks)
+
+        for register in registers:
+            register()
 
     else:
         parser.print_help()

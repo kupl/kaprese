@@ -15,7 +15,10 @@ class Benchmark:
     name: str
     language: str
     image: str
-    availability: bool
+
+    @property
+    def availability(self) -> bool:
+        return False
 
     def register(self, *, overwrite: bool = False) -> None:
         benchmarks_dir = _get_benchmark_path()
