@@ -81,9 +81,9 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
             table = Table(title="kaprese benchmarks")
             table.add_column("name", justify="left")
             table.add_column("image", justify="left")
-            table.add_column("ready", justify="left")
             table.add_column("availability", justify="left")
             table.add_column("language", justify="left")
+            table.add_column("os", justify="left")
 
             with console.status("") as status:
                 for i, benchmark in enumerate(all := all_benchmarks()):
@@ -93,11 +93,11 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
                     table.add_row(
                         benchmark.name,
                         benchmark.image,
-                        "yes" if benchmark.ready else "[grey23]no[/grey23]",
                         "yes" if benchmark.availability else "[grey23]no[/grey23]",
                         language
                         if (language := benchmark.language)
                         else "[grey23]n/a[/grey23]",
+                        os if (os := benchmark.os) else "[grey23]unknown[/grey23]",
                     )
             console.print(table)
 
@@ -152,6 +152,9 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
                     )
                     console.print(f'Failed to prepare benchmark "{bench_name}"')
                     continue
+
+                if benchmark.os is None:
+                    logger.warning(f'Failed to get os of benchmark "{bench_name}"')
 
                 if not benchmark.ready:
                     logger.warning(f'Failed to prepare benchmark "{bench_name}"')
