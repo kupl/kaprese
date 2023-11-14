@@ -17,7 +17,13 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
 
     list_parser = subparsers.add_parser("list", help="list benchmarks")
     list_parser.add_argument(
-        "-a", "--all", action="store_true", help="list all benchmarks"
+        "-d",
+        "--detail",
+        action="store_true",
+        help="show details of benchmarks (this make take some time)",
+    )
+    list_parser.add_argument(
+        "-q", "--quiet", action="store_true", help="only show names of benchmarks"
     )
 
     preset_parser = subparsers.add_parser("preset", help="add preset benchmarks")
@@ -35,26 +41,36 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
     args = parser.parse_args(argv, namespace=args) if args else parser.parse_args(argv)
 
     if args.subcommand == "list":
-        table = Table(title="kaprese benchmarks")
+        if args.quiet:
+            for benchmark in all_benchmarks():
+                print(benchmark.name)
 
-        table.add_column("name", justify="left")
-        table.add_column("language", justify="left")
-        table.add_column("image", justify="left")
-        table.add_column("availability", justify="left")
+        else:
+            table = Table(title="kaprese benchmarks")
+            table.add_column("name", justify="left")
+            table.add_column("image", justify="left")
+            if args.detail:
+                table.add_column("ready", justify="left")
+                table.add_column("language", justify="left")
 
-        for benchmark in all_benchmarks():
-            if not args.all and not benchmark.availability:
-                continue
-            table.add_row(
-                benchmark.name,
-                benchmark.language,
-                benchmark.image,
-                "yes" if benchmark.availability else "no",
-            )
-
-        console.print(table)
+            for benchmark in all_benchmarks():
+                row = (benchmark.name, benchmark.image) + (
+                    (
+                        "yes" if (availability := benchmark.availability) else "no",
+                        language
+                        if availability and (language := benchmark.language)
+                        else "-",
+                    )
+                    if args.detail
+                    else ()
+                )
+                table.add_row(*row)
+            console.print(table)
 
     elif args.subcommand == "preset":
+        if len(args.preset) == 0:
+            preset_parser.print_help()
+            sys.exit(1)
         registers: list[Callable[[bool], None]] = []
         if "ocaml" in args.preset or "all" in args.preset:
             registers.append(register_ocaml_benchmarks)
