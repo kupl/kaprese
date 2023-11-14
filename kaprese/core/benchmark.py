@@ -21,6 +21,9 @@ class Benchmark:
     _language: str | None = None
     language_command: str | None = dataclasses.field(default=None, repr=False)
 
+    # Internal fields
+    _availablility: bool = dataclasses.field(init=False, default=False, repr=False)
+
     @property
     def language(self) -> str | None:
         if self._language is None and self.availability:
@@ -32,7 +35,9 @@ class Benchmark:
 
     @property
     def availability(self) -> bool:
-        return image_exists(self.image)
+        if not self._availablility:
+            self._availablility = image_exists(self.image)
+        return self._availablility
 
     @property
     def ready(self) -> bool:
@@ -48,6 +53,7 @@ class Benchmark:
         logger.info(f"Cleaning up benchmark {self.name}")
         if self.language_command is not None:
             self._language = None
+        self._availablility = False
         if delete_image and self.availability:
             docker_delete_image(self.image)
         return self
