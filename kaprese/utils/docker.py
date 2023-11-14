@@ -1,5 +1,8 @@
 from docker.client import DockerClient  # type: ignore
-from docker.errors import APIError, ContainerError, ImageNotFound  # type: ignore
+from docker.errors import APIError  # type: ignore
+from docker.errors import BuildError  # type: ignore
+from docker.errors import ContainerError  # type: ignore
+from docker.errors import ImageNotFound  # type: ignore
 
 from kaprese.core.config import CONFIGURE
 from kaprese.utils.logging import logger
@@ -33,6 +36,21 @@ def delete_image(name: str) -> None:
     logger.info(f"Deleting image {name}")
     client = get_docker_client()
     client.images.remove(name)  # type: ignore
+
+
+def build_image(name: str, dockerfile: str) -> bool:
+    client = get_docker_client()
+    try:
+        image, _ = client.images.build(  # type: ignore
+            fileobj=dockerfile.encode(),
+            custom_context=True,
+            tag=name,
+            rm=True,
+            forcerm=True,
+        )
+        return image is not None
+    except (BuildError, APIError):
+        return False
 
 
 def run_command(image: str, command: str | None) -> str | None:
