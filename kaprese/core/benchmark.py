@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 from kaprese.core.config import CONFIGURE
-from kaprese.utils.docker import image_exists, run_command
+from kaprese.utils.docker import image_exists, pull_image, run_command
 from kaprese.utils.logging import logger
 
 
@@ -22,7 +22,7 @@ class Benchmark:
 
     @property
     def language(self) -> str | None:
-        if self._language is None and self.availability and image_exists(self.image):
+        if self._language is None and self.availability:
             out = run_command(self.image, self.language_command)
             if out is not None:
                 out = out.strip()
@@ -32,6 +32,16 @@ class Benchmark:
     @property
     def availability(self) -> bool:
         return image_exists(self.image)
+
+    @property
+    def ready(self) -> bool:
+        return self.availability and self.language is not None
+
+    def pull(self) -> Benchmark:
+        if not self.availability:
+            logger.info(f"Pulling benchmark {self.name}")
+            pull_image(self.image)
+        return self
 
     def register(self, *, overwrite: bool = False) -> None:
         benchmarks_dir = _get_benchmark_path()

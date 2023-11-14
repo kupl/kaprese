@@ -6,8 +6,9 @@ from rich.table import Table
 
 from kaprese.benchmarks.c import register_benchmarks as register_c_benchmarks
 from kaprese.benchmarks.ocaml import register_benchmarks as register_ocaml_benchmarks
-from kaprese.core.benchmark import all_benchmarks
+from kaprese.core.benchmark import Benchmark, all_benchmarks
 from kaprese.utils.console import console
+from kaprese.utils.logging import logger
 
 
 def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = None):
@@ -37,6 +38,13 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
         help="preset benchmarks to add",
     )
 
+    prepare_parser = subparsers.add_parser("prepare", help="prepare benchmarks")
+    prepare_parser.add_argument(
+        "benchmark",
+        nargs="*",
+        help='benchmark to prepare (see "kaprese benchmark list")',
+    )
+
     # Branching to pass type checking
     args = parser.parse_args(argv, namespace=args) if args else parser.parse_args(argv)
 
@@ -51,15 +59,17 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
             table.add_column("image", justify="left")
             if args.detail:
                 table.add_column("ready", justify="left")
+                table.add_column("availability", justify="left")
                 table.add_column("language", justify="left")
 
             for benchmark in all_benchmarks():
                 row = (benchmark.name, benchmark.image) + (
                     (
-                        "yes" if (availability := benchmark.availability) else "no",
+                        "yes" if benchmark.ready else "[grey23]no[/grey23]",
+                        "yes" if benchmark.availability else "[grey23]no[/grey23]",
                         language
-                        if availability and (language := benchmark.language)
-                        else "-",
+                        if (language := benchmark.language)
+                        else "[grey23]n/a[/grey23]",
                     )
                     if args.detail
                     else ()
@@ -79,6 +89,30 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
 
         for register in registers:
             register(args.overwrite)
+
+    elif args.subcommand == "prepare":
+        if len(args.benchmark) == 0:
+            prepare_parser.print_help()
+            sys.exit(1)
+
+        if "all" in args.benchmark:
+            args.benchmark = [b.name for b in all_benchmarks()]
+
+        for bench_name in args.benchmark:
+            benchmark = Benchmark.load(bench_name)
+            if benchmark is None:
+                logger.warning(f"Benchmark {bench_name} not found")
+                continue
+            benchmark.pull()
+            if not benchmark.availability:
+                logger.warning(f'Failed to pull benchmark "{bench_name}"')
+                continue
+            benchmark.language
+            if benchmark.language is None:
+                logger.warning(f'Failed to get language of benchmark "{bench_name}"')
+                continue
+            if not benchmark.ready:
+                logger.warning(f'Failed to prepare benchmark "{bench_name}"')
 
     else:
         parser.print_help()
