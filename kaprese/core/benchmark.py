@@ -23,6 +23,13 @@ class Benchmark:
 
     # Internal fields
     _availablility: bool = dataclasses.field(init=False, default=False, repr=False)
+    _os: str | None = dataclasses.field(init=False, default=None, repr=False)
+
+    @property
+    def availability(self) -> bool:
+        if not self._availablility:
+            self._availablility = image_exists(self.image)
+        return self._availablility
 
     @property
     def language(self) -> str | None:
@@ -34,10 +41,18 @@ class Benchmark:
         return self._language
 
     @property
-    def availability(self) -> bool:
-        if not self._availablility:
-            self._availablility = image_exists(self.image)
-        return self._availablility
+    def os(self) -> str | None:
+        if self._os is None and self.availability:
+            out = run_command(self.image, "cat /etc/os-release")
+            if out is not None:
+                out = out.strip()
+                data = {
+                    key.strip('"'): value.strip('"')
+                    for key, value in [line.split("=") for line in out.split("\n")]
+                }
+                out = f'{data["ID"]}:{data["VERSION_ID"]}'
+            self._os = out
+        return self._os
 
     @property
     def ready(self) -> bool:
