@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from kaprese.core.config import CONFIGURE
+from kaprese.utils.docker import delete_image as docker_delete_image
 from kaprese.utils.docker import image_exists, pull_image, run_command
 from kaprese.utils.logging import logger
 
@@ -37,10 +38,18 @@ class Benchmark:
     def ready(self) -> bool:
         return self.availability and self.language is not None
 
-    def pull(self) -> Benchmark:
-        if not self.availability:
+    def pull(self, *, force: bool = False) -> Benchmark:
+        if not self.availability or force:
             logger.info(f"Pulling benchmark {self.name}")
             pull_image(self.image)
+        return self
+
+    def cleanup(self, *, delete_image: bool = False) -> Benchmark:
+        logger.info(f"Cleaning up benchmark {self.name}")
+        if self.language_command is not None:
+            self._language = None
+        if delete_image and self.availability:
+            docker_delete_image(self.image)
         return self
 
     def register(self, *, overwrite: bool = False) -> None:
@@ -55,7 +64,9 @@ class Benchmark:
             logger.warning("Overwriting benchmark")
         self.save(benchmark_file)
 
-    def unregister(self) -> None:
+    def unregister(self, *, cleanup: bool = False) -> None:
+        if cleanup:
+            self.cleanup()
         benchmark_file = _get_benchmark_path() / f"{self.name}.json"
         if not benchmark_file.exists():
             logger.warning(f"Benchmark {self.name} does not exist")

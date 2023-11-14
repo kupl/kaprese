@@ -26,6 +26,15 @@ def pull_image(name: str) -> bool:
         return False
 
 
+def delete_image(name: str) -> None:
+    if not image_exists(name):
+        logger.warning(f"Image {name} does not exist")
+        return
+    logger.info(f"Deleting image {name}")
+    client = get_docker_client()
+    client.images.remove(name)  # type: ignore
+
+
 def run_command(image: str, command: str | None) -> str | None:
     client = get_docker_client()
     try:
