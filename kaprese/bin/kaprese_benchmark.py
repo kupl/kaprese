@@ -40,9 +40,19 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
 
     prepare_parser = subparsers.add_parser("prepare", help="prepare benchmarks")
     prepare_parser.add_argument(
+        "-f", "--force", action="store_true", help="force prepare benchmarks"
+    )
+    prepare_parser.add_argument(
         "benchmark",
         nargs="*",
         help='benchmark to prepare (see "kaprese benchmark list")',
+    )
+
+    cleanup_parser = subparsers.add_parser("cleanup", help="cleanup benchmarks")
+    cleanup_parser.add_argument(
+        "benchmark",
+        nargs="*",
+        help='benchmark to cleanup (see "kaprese benchmark list")',
     )
 
     # Branching to pass type checking
@@ -98,21 +108,58 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
         if "all" in args.benchmark:
             args.benchmark = [b.name for b in all_benchmarks()]
 
+        with console.status("") as status:
+            for i, bench_name in enumerate(args.benchmark):
+                status.update(
+                    f"[bold green][{i + 1} / {len(args.benchmark)}] Preparing benchmark {bench_name}"
+                )
+
+                benchmark = Benchmark.load(bench_name)
+                if benchmark is None:
+                    logger.warning(f'Benchmark "{bench_name}" not found')
+                    console.print(f'Benchmark "{bench_name}" not found')
+                    continue
+
+                if benchmark.ready and not args.force:
+                    console.print(f'Benchmark "{bench_name}" is ready')
+                    continue
+                if args.force and benchmark.ready:
+                    benchmark.cleanup()
+
+                benchmark.pull(force=args.force)
+                if not benchmark.availability:
+                    logger.warning(f'Failed to pull benchmark "{bench_name}"')
+                    console.print(f'Failed to prepare benchmark "{bench_name}"')
+                    continue
+
+                if benchmark.language is None:
+                    logger.warning(
+                        f'Failed to get language of benchmark "{bench_name}"'
+                    )
+                    console.print(f'Failed to prepare benchmark "{bench_name}"')
+                    continue
+
+                if not benchmark.ready:
+                    logger.warning(f'Failed to prepare benchmark "{bench_name}"')
+                    console.print(f'Failed to prepare benchmark "{bench_name}"')
+                    continue
+
+                console.print(f'Benchmark "{bench_name}" is ready')
+
+    elif args.subcommand == "cleanup":
+        if len(args.benchmark) == 0:
+            cleanup_parser.print_help()
+            sys.exit(1)
+
+        if "all" in args.benchmark:
+            args.benchmark = [b.name for b in all_benchmarks()]
+
         for bench_name in args.benchmark:
             benchmark = Benchmark.load(bench_name)
             if benchmark is None:
-                logger.warning(f"Benchmark {bench_name} not found")
+                logger.warning(f'Benchmark "{bench_name}" not found')
                 continue
-            benchmark.pull()
-            if not benchmark.availability:
-                logger.warning(f'Failed to pull benchmark "{bench_name}"')
-                continue
-            benchmark.language
-            if benchmark.language is None:
-                logger.warning(f'Failed to get language of benchmark "{bench_name}"')
-                continue
-            if not benchmark.ready:
-                logger.warning(f'Failed to prepare benchmark "{bench_name}"')
+            benchmark.cleanup()
 
     else:
         parser.print_help()
