@@ -92,6 +92,7 @@ class Benchmark:
         benchmark = dataclasses.asdict(self)
         if benchmark["_language"] is None:
             del benchmark["_language"]
+        del benchmark["_availablility"]
         path.write_text(json.dumps(benchmark))
 
 
