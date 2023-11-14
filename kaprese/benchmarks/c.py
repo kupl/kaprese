@@ -6,7 +6,7 @@ def register_benchmarks(overwrite: bool = False) -> None:
     flexs = [
         Benchmark(
             f"flex-{i}",
-            f"ghcr.io/kupl/starlab-benchmarks/c:c-{i}",
+            f"ghcr.io/kupl/starlab-benchmarks/c:flex-{i}",
             language_command="cat metadata.json | jq -r .language",
         )
         for i in range(1, 7)
