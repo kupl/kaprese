@@ -5,7 +5,8 @@ from typing import Callable
 from rich.table import Table
 
 from kaprese.benchmarks.c import register_benchmarks as register_c_benchmarks
-from kaprese.benchmarks.ocaml import register_benchmarks as register_ocaml_benchmarks
+from kaprese.benchmarks.ocaml import \
+    register_benchmarks as register_ocaml_benchmarks
 from kaprese.core.benchmark import Benchmark, all_benchmarks
 from kaprese.utils.console import console
 from kaprese.utils.logging import logger
@@ -49,6 +50,12 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
     )
 
     cleanup_parser = subparsers.add_parser("cleanup", help="cleanup benchmarks")
+    cleanup_parser.add_argument(
+        "-d",
+        "--delete-image",
+        action="store_true",
+        help="delete the image of benchmarks from registry",
+    )
     cleanup_parser.add_argument(
         "benchmark",
         nargs="*",
@@ -159,7 +166,7 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
             if benchmark is None:
                 logger.warning(f'Benchmark "{bench_name}" not found')
                 continue
-            benchmark.cleanup()
+            benchmark.cleanup(delete_image=args.delete_image)
 
     else:
         parser.print_help()
