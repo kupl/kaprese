@@ -20,7 +20,13 @@ class Engine:
     )
     supported_languages: list[str] = dataclasses.field(default_factory=list)
     supported_os: list[str] = dataclasses.field(default_factory=list)
-    location: str | None = dataclasses.field(default=None, repr=False)
+    image: str = ""
+    basedir: str | None = dataclasses.field(default=None, repr=False)
+    dockerfile: str | None = dataclasses.field(default=None, repr=False)
+
+    def __post_init__(self) -> None:
+        if len(self.image) == 0:
+            self.image = f"kaprese-engine-{self.name}"
 
     def dump(self) -> dict[str, str | list[str]]:
         return dataclasses.asdict(self)
@@ -40,12 +46,7 @@ class Engine:
         if not engine_file.exists():
             return None
         data = json.loads(engine_file.read_text())
-        return cls(
-            name=data.get("name"),
-            supported_languages=data.get("supported_languages"),
-            supported_os=data.get("supported_os"),
-            location=data.get("location"),
-        )
+        return cls(**data)
 
     def register(self, *, overwrite: bool = False) -> None:
         engines_dir = _get_engine_path()

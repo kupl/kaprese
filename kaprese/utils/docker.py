@@ -38,10 +38,11 @@ def delete_image(name: str) -> None:
     client.images.remove(name)  # type: ignore
 
 
-def build_image(name: str, dockerfile: str) -> bool:
+def build_image(name: str, dockerfile: str, *, basedir: str | None = None) -> bool:
     client = get_docker_client()
     try:
         image, _ = client.images.build(  # type: ignore
+            path=basedir,
             fileobj=dockerfile.encode(),
             custom_context=True,
             tag=name,
