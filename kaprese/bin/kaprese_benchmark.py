@@ -168,12 +168,20 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
         if "all" in args.benchmark:
             args.benchmark = [b.name for b in all_benchmarks()]
 
-        for bench_name in args.benchmark:
-            benchmark = Benchmark.load(bench_name)
-            if benchmark is None:
-                logger.warning(f'Benchmark "{bench_name}" not found')
-                continue
-            benchmark.cleanup(delete_image=args.delete_image)
+        with console.status("") as status:
+            for i, bench_name in enumerate(args.benchmark):
+                status.update(
+                    f"[bold green][{i + 1} / {len(args.benchmark)}] Cleaning up benchmark {bench_name}"
+                )
+
+                benchmark = Benchmark.load(bench_name)
+                if benchmark is None:
+                    logger.warning(f'Benchmark "{bench_name}" not found')
+                    console.print(f'Benchmark "{bench_name}" not found')
+                    continue
+
+                benchmark.cleanup(delete_image=args.delete_image)
+                console.print(f'Benchmark "{bench_name}" is cleaned up')
 
     else:
         parser.print_help()
