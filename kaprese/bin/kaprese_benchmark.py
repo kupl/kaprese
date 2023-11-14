@@ -5,8 +5,7 @@ from typing import Callable
 from rich.table import Table
 
 from kaprese.benchmarks.c import register_benchmarks as register_c_benchmarks
-from kaprese.benchmarks.ocaml import \
-    register_benchmarks as register_ocaml_benchmarks
+from kaprese.benchmarks.ocaml import register_benchmarks as register_ocaml_benchmarks
 from kaprese.core.benchmark import Benchmark, all_benchmarks
 from kaprese.utils.console import console
 from kaprese.utils.logging import logger
@@ -70,28 +69,36 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
             for benchmark in all_benchmarks():
                 print(benchmark.name)
 
+        elif not args.detail:
+            table = Table(title="kaprese benchmarks")
+            table.add_column("name", justify="left")
+            table.add_column("image", justify="left")
+            for benchmark in all_benchmarks():
+                table.add_row(benchmark.name, benchmark.image)
+            console.print(table)
+
         else:
             table = Table(title="kaprese benchmarks")
             table.add_column("name", justify="left")
             table.add_column("image", justify="left")
-            if args.detail:
-                table.add_column("ready", justify="left")
-                table.add_column("availability", justify="left")
-                table.add_column("language", justify="left")
+            table.add_column("ready", justify="left")
+            table.add_column("availability", justify="left")
+            table.add_column("language", justify="left")
 
-            for benchmark in all_benchmarks():
-                row = (benchmark.name, benchmark.image) + (
-                    (
+            with console.status("") as status:
+                for i, benchmark in enumerate(all := all_benchmarks()):
+                    status.update(
+                        f"[bold green][{i + 1} / {len(all)}] Checking benchmark {benchmark.name}"
+                    )
+                    table.add_row(
+                        benchmark.name,
+                        benchmark.image,
                         "yes" if benchmark.ready else "[grey23]no[/grey23]",
                         "yes" if benchmark.availability else "[grey23]no[/grey23]",
                         language
                         if (language := benchmark.language)
                         else "[grey23]n/a[/grey23]",
                     )
-                    if args.detail
-                    else ()
-                )
-                table.add_row(*row)
             console.print(table)
 
     elif args.subcommand == "preset":
