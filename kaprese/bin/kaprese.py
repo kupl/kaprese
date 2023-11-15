@@ -11,7 +11,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     if argv is None:
         argv = sys.argv[1:]
 
-    parser = argparse.ArgumentParser(prog="kaprese")
+    parser = argparse.ArgumentParser()
     parser.add_argument(
         "-v", "--version", action="version", version=f"%(prog)s {__version__}"
     )
@@ -31,7 +31,11 @@ def main(argv: Optional[List[str]] = None) -> None:
     )
     subparsers.add_parser("engine", add_help=False, help="engine related commands")
     subparsers.add_parser("engines", add_help=False, help="list engines")
-    subparsers.add_parser("run", add_help=False, help="run engines on benchmark")
+    run_parser = subparsers.add_parser(
+        "run",
+        add_help=False,
+        help="run engines on benchmarks",
+    )
 
     args, remainder = parser.parse_known_args(argv)
 
@@ -61,7 +65,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     elif args.subcommand == "run":
         from kaprese.bin.kaprese_run import main
 
-        main(remainder, args=args)
+        main(run_parser, remainder, args)
 
     else:
         parser.print_help()

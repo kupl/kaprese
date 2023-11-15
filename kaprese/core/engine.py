@@ -21,8 +21,7 @@ class Engine:
     supported_languages: list[str] = dataclasses.field(default_factory=list)
     supported_os: list[str] = dataclasses.field(default_factory=list)
     image: str = ""
-    basedir: str | None = dataclasses.field(default=None, repr=False)
-    dockerfile: str | None = dataclasses.field(default=None, repr=False)
+    location: str | None = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         if len(self.image) == 0:
