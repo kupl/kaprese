@@ -63,6 +63,9 @@ def main(
         "-h", "--help", action="help", help="show this help message and exit"
     )
     parser.add_argument(
+        "--delete-runner", action="store_true", help="delete runner image after running"
+    )
+    parser.add_argument(
         "-e",
         "--engine",
         nargs="*",
@@ -137,7 +140,7 @@ def main(
             status_cells[engine.name, bench.name].start()
             logger.info(f"Running {bench.name} on {engine.name}")
             runner = Runner(bench, engine)
-            result = runner.run()
+            result = runner.run(delete_runner=args.delete_runner)
             status_cells[engine.name, bench.name].done(result)
         pannel_console.print(":party_popper: Done! Press Ctrl+C to exit.")
         try:

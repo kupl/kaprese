@@ -1,6 +1,6 @@
 from kaprese.core.benchmark import Benchmark
 from kaprese.core.engine import Engine
-from kaprese.utils.docker import build_image, image_exists, pull_image
+from kaprese.utils.docker import build_image, delete_image, image_exists, pull_image
 from kaprese.utils.logging import logger
 
 
@@ -9,27 +9,46 @@ class Runner:
         self.benchmark = benchmark
         self.engine = engine
 
-    def run(self) -> bool:
+    def run(self, *, delete_runner: bool = False) -> bool:
         if not self.benchmark.ready:
+            logger.info('Trying to pull benchmark "%s"', self.benchmark.name)
             self.benchmark.pull()
         if not self.benchmark.ready:
-            logger.warning(f'Failed to prepare benchmark "{self.benchmark.name}"')
+            logger.error('Failed to pull benchmark "%s"', self.benchmark.name)
             return False
 
         runner_image_tag = f"{self.engine.image}:{self.benchmark.name}"
         if not image_exists(runner_image_tag):
+            logger.info('Trying to pull or build engine image "%s"', self.engine.image)
             if pull_image(runner_image_tag):
-                logger.info(f'Pulled runner image "{runner_image_tag}"')
+                logger.info('Pulled runner image "%s"', runner_image_tag)
             else:
-                logger.info(f'No prebuilt runner image "{runner_image_tag}"')
+                logger.info('No prebuilt runner image "%s"', runner_image_tag)
                 if self.engine.location is None:
-                    logger.warning(
-                        f'Failed to pull runner image "{runner_image_tag}" and no location provided'
+                    logger.error(
+                        'Failed to pull runner image "%s": no engine location provided',
+                        runner_image_tag,
                     )
+
                     return False
                 if build_image(runner_image_tag, self.engine.location):
-                    logger.info(f'Build runner image "{runner_image_tag}"')
+                    logger.info('Built runner image "%s"', runner_image_tag)
                 else:
-                    logger.warning(f'Failed to build runner image "{runner_image_tag}"')
+                    logger.warning(
+                        'Failed to build runner image "%s": maybe wrong location? (current=%s)',
+                        runner_image_tag,
+                        self.engine.location,
+                    )
                     return False
+
+        logger.info(
+            'Running benchmark "%s" with engine "%s"',
+            self.benchmark.name,
+            self.engine.name,
+        )
+
+        if delete_runner:
+            logger.info('Deleting runner image "%s"', runner_image_tag)
+            delete_image(runner_image_tag)
+
         return True
