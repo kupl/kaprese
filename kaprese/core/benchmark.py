@@ -20,6 +20,8 @@ class Benchmark:
     image: str
     _language: str | None = None
     language_command: str | None = dataclasses.field(default=None, repr=False)
+    _workdir: str | None = dataclasses.field(default=None, repr=False)
+    workdir_command: str | None = dataclasses.field(default=None, repr=False)
 
     # Internal fields
     _availablility: bool = dataclasses.field(init=False, default=False, repr=False)
@@ -41,6 +43,15 @@ class Benchmark:
         return self._language
 
     @property
+    def workdir(self) -> str | None:
+        if self._workdir is None and self.availability:
+            out = run_command(self.image, self.workdir_command)
+            if out is not None:
+                out = out.strip()
+            self._workdir = out
+        return self._workdir
+
+    @property
     def os(self) -> str | None:
         if self._os is None and self.availability:
             out = run_command(self.image, "cat /etc/os-release")
@@ -57,6 +68,15 @@ class Benchmark:
     @property
     def ready(self) -> bool:
         return self.availability and self.language is not None
+
+    def prepare(self, *, force: bool = False) -> Benchmark:
+        if not self.availability or force:
+            self.pull(force=force)
+        if self.availability:
+            self.language
+            self.workdir
+            self.os
+        return self
 
     def pull(self, *, force: bool = False) -> Benchmark:
         if not self.availability or force:
