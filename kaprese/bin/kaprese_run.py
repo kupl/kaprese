@@ -13,6 +13,7 @@ from rich.measure import Measurement
 from rich.panel import Panel
 from rich.spinner import Spinner
 from rich.table import Table
+from rich.text import Text
 
 from kaprese.core.benchmark import Benchmark
 from kaprese.core.engine import Engine
@@ -38,12 +39,16 @@ class _RunnerStatus:
     def __rich_console__(
         self, console: Console, options: ConsoleOptions
     ) -> RenderResult:
-        if self._status == "Running":
+        if self._status == "Pending":
+            return Text(self._status, style="grey23")
+        elif self._status == "Running":
             yield self._running_spinner.render(
                 console.get_time()
             ) if self._running_spinner is not None else "Running..."
-        else:
-            yield self._status
+        elif self._status == "OK":
+            yield Text(self._status, style="green")
+        elif self._status == "Failed":
+            yield Text(self._status, style="red")
 
     def __rich_measure__(
         self, console: Console, options: ConsoleOptions
@@ -113,7 +118,7 @@ def main(
         Layout(name="log", ratio=1),
     )
 
-    table = Table(title="Running Summary")
+    table = Table(title="kaprese running summary")
     table.add_column("Engine", justify="left")
     table.add_column("Benchmark", justify="left")
     table.add_column("Status", justify="left")
