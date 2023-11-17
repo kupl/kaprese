@@ -69,6 +69,39 @@ class _RunnerStatus:
             return Measurement(len(self._status), len(self._status))
 
 
+class _SummaryTable:
+    def __init__(self, title: str = "kaprese running summary") -> None:
+        self._title = title
+        self._columns = ["Engine", "Benchmark", "Status"]
+        self._rows: list[tuple[str, str, str, _RunnerStatus]] = []
+
+    def add_row(self, engine: str, benchmark: str, status: _RunnerStatus) -> None:
+        self._rows.append((str(len(self._rows) + 1), engine, benchmark, status))
+
+    def __rich_console__(
+        self, console: Console, options: ConsoleOptions
+    ) -> RenderResult:
+        table = Table(title="kaprese running summary")
+        table.add_column("#", justify="right")
+        table.add_column("Engine", justify="left")
+        table.add_column("Benchmark", justify="left")
+        table.add_column("Status", justify="left")
+        for row in self._rows[-(options.max_height - 5) :]:
+            table.add_row(*row)
+        yield table
+
+    @property
+    def full_table(self) -> Table:
+        table = Table(title=self._title)
+        table.add_column("#", justify="right")
+        table.add_column("Engine", justify="left")
+        table.add_column("Benchmark", justify="left")
+        table.add_column("Status", justify="left")
+        for row in self._rows:
+            table.add_row(*row)
+        return table
+
+
 def main(
     parser: argparse.ArgumentParser,
     argv: list[str],
@@ -128,10 +161,7 @@ def main(
         Layout(name="log", ratio=1),
     )
 
-    table = Table(title="kaprese running summary")
-    table.add_column("Engine", justify="left")
-    table.add_column("Benchmark", justify="left")
-    table.add_column("Status", justify="left")
+    table = _SummaryTable(title="kaprese running summary")
     layout["summary"].update(Align.center(table, vertical="middle"))
 
     logger.removeHandler(logger.handlers[0])
@@ -141,7 +171,7 @@ def main(
     logger.addHandler(handler)
     layout["log"].update(Panel(pannel_console, title="logs"))
 
-    with Live(layout, console=console):
+    with Live(layout, console=console, screen=True, refresh_per_second=12.5):
         for engine, bench in product(engines, benchmarks):
             status = _RunnerStatus()
             table.add_row(engine.name, bench.name, status)
@@ -165,3 +195,5 @@ def main(
                 sleep(1)
         except KeyboardInterrupt:
             pass
+    console.clear()
+    console.print(table.full_table)
