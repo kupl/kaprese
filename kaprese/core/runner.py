@@ -87,7 +87,7 @@ class Runner:
             commands,
             workdir=self.benchmark.workdir,
             mount={self.output_dir: self.mount_dir},
-        ) as stream:
+        ) as (stream, status):
             if stream is None:
                 result = False
             else:
@@ -98,6 +98,7 @@ class Runner:
                         self.benchmark.name,
                         line.decode().strip("\n"),
                     )
+                result = status["StatusCode"] == 0
 
         if delete_runner:
             logger.info('Deleting runner image "%s"', runner_image_tag)

@@ -1,7 +1,7 @@
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict, cast
 
 from docker.client import DockerClient  # type: ignore
 from docker.errors import APIError  # type: ignore
@@ -113,22 +113,31 @@ def _make_mount_dict(mount: dict[Path | str, Path | str]) -> dict[str, dict[str,
     }
 
 
+class DockerExitStatus(TypedDict):
+    StatusCode: int | None
+
+
 @contextmanager
 def run_command_stream(
     image: str,
     command: str | None,
     workdir: str | None = None,
     mount: dict[Path | str, Path | str] | None = None,
-) -> Generator[Generator[bytes, None, None] | None, None, None]:
+) -> Generator[
+    tuple[Generator[bytes, None, None] | None, DockerExitStatus], None, None
+]:
     logger.debug("Running commands stream")
     logger.debug("  image: %s", image)
     logger.debug("  command: %s", command)
     logger.debug("  workdir: %s", workdir)
     logger.debug("  mount: %s", mount)
     client = get_docker_client()
+    exit_status = DockerExitStatus(
+        StatusCode=None,
+    )
     if not image_exists(image):
         logger.debug('Image "%s" does not exist', image)
-        yield None
+        yield None, exit_status
     else:
         try:
             kwargs: dict[str, Any] = {}
@@ -147,8 +156,11 @@ def run_command_stream(
                 }
             )
             container: Container = client.containers.run(image, **kwargs)  # type: ignore
-            yield container.logs(stream=True)  # type: ignore
+
+            yield container.logs(stream=True), exit_status #type: ignore
             container.stop()  # type: ignore
+            result = cast(dict[str, Any], container.wait())  # type: ignore
+            exit_status["StatusCode"] = result["StatusCode"]
             container.remove()  # type: ignore
         except ContainerError as e:
             logger.debug('Failed to run command "%s" in image "%s"', command, image)
@@ -162,8 +174,10 @@ def run_commands_stream(
     commands: list[str] | None,
     workdir: str | None = None,
     mount: dict[Path | str, Path | str] | None = None,
-) -> Generator[Generator[bytes, None, None] | None, None, None]:
+) -> Generator[
+    tuple[Generator[bytes, None, None] | None, DockerExitStatus], None, None
+]:
     command = "; ".join(commands) if commands is not None else None
-    with run_command_stream(image, command, workdir, mount) as stream:
-        yield stream
+    with run_command_stream(image, command, workdir, mount) as ret:
+        yield ret
     return None
