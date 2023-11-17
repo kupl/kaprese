@@ -181,6 +181,11 @@ def main(
         for engine, bench in product(engines, benchmarks):
             status = _RunnerStatus()
             table.add_row(engine.name, bench.name, status)
+            if not bench.ready:
+                logger.info(
+                    'Benchmark "%s" not prepared, ' "trying to prepare it", bench.name
+                )
+                bench.prepare()
             support_check = engine.support(bench)
             status.check(support_check)
             if not support_check:
