@@ -121,7 +121,6 @@ class Benchmark:
     def load(cls, name: str) -> Benchmark | None:
         benchmark_file = _get_benchmark_path() / f"{name}.json"
         if not benchmark_file.exists():
-            logger.warning(f"Benchmark {name} does not exist")
             return None
         return cls(**json.loads(benchmark_file.read_text()))
 
