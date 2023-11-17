@@ -25,36 +25,46 @@ from kaprese.utils.logging import DATE_FORMAT, FORMAT, logger
 class _RunnerStatus:
     def __init__(self) -> None:
         self._status: Union[
-            Literal["Pending"], Literal["Running"], Literal["OK"], Literal["Failed"]
-        ] = "Pending"
-        self._running_spinner = None
+            Literal["Checking"],
+            Literal["Pending"],
+            Literal["Running"],
+            Literal["Not supported"],
+            Literal["OK"],
+            Literal["Failed"],
+        ] = "Checking"
+        self._spinner = Spinner("dots", "Checking...")
+
+    def check(self, passed: bool) -> None:
+        self._status = "Pending" if passed else "Not supported"
+        self._spinner = None
 
     def start(self) -> None:
         self._status = "Running"
-        self._running_spinner = Spinner("dots", "Running...")
+        self._spinner = Spinner("dots", "Running...")
 
     def done(self, result: bool) -> None:
         self._status = "OK" if result else "Failed"
+        self._spinner = None
 
     def __rich_console__(
         self, console: Console, options: ConsoleOptions
     ) -> RenderResult:
         if self._status == "Pending":
             return Text(self._status, style="grey23")
-        elif self._status == "Running":
-            yield self._running_spinner.render(
+        elif self._status == "Running" or self._status == "Checking":
+            yield self._spinner.render(
                 console.get_time()
-            ) if self._running_spinner is not None else "Running..."
+            ) if self._spinner is not None else f"{self._status}..."
         elif self._status == "OK":
             yield Text(self._status, style="green")
-        elif self._status == "Failed":
+        elif self._status == "Failed" or self._status == "Not supported":
             yield Text(self._status, style="red")
 
     def __rich_measure__(
         self, console: Console, options: ConsoleOptions
     ) -> Measurement:
-        if self._status == "Running":
-            return Measurement(12, 12)
+        if self._status == "Running" or self._status == "Checking":
+            return Measurement(len(self._status) + 5, len(self._status) + 5)
         else:
             return Measurement(len(self._status), len(self._status))
 
@@ -122,15 +132,6 @@ def main(
     table.add_column("Engine", justify="left")
     table.add_column("Benchmark", justify="left")
     table.add_column("Status", justify="left")
-    status_cells: dict[tuple[str, str], _RunnerStatus] = {}
-    for engine, bench in product(engines, benchmarks):
-        cell = _RunnerStatus()
-        status_cells[engine.name, bench.name] = cell
-        table.add_row(
-            engine.name,
-            bench.name,
-            cell,
-        )
     layout["summary"].update(Align.center(table, vertical="middle"))
 
     logger.removeHandler(logger.handlers[0])
@@ -142,11 +143,22 @@ def main(
 
     with Live(layout, console=console):
         for engine, bench in product(engines, benchmarks):
-            status_cells[engine.name, bench.name].start()
+            status = _RunnerStatus()
+            table.add_row(engine.name, bench.name, status)
+            support_check = engine.support(bench)
+            status.check(support_check)
+            if not support_check:
+                logger.warning(
+                    'Engine "%s" does not support benchmark "%s"',
+                    engine.name,
+                    bench.name,
+                )
+                continue
+            status.start()
             logger.info(f"Running {bench.name} on {engine.name}")
             runner = Runner(bench, engine)
             result = runner.run(delete_runner=args.delete_runner)
-            status_cells[engine.name, bench.name].done(result)
+            status.done(result)
         pannel_console.print(":party_popper: Done! Press Ctrl+C to exit.")
         try:
             while True:

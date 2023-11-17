@@ -5,6 +5,7 @@ import json
 import uuid
 from pathlib import Path
 
+from kaprese.core.benchmark import Benchmark
 from kaprese.core.config import CONFIGURE
 from kaprese.utils.logging import logger
 
@@ -58,6 +59,12 @@ class Engine:
                 return
             logger.warning(f"Overwriting engine {self.name}")
         self.save(engine_file)
+
+    def support(self, benchmark: Benchmark) -> bool:
+        return (
+            benchmark.os in self.supported_os
+            and benchmark.language in self.supported_languages
+        )
 
 
 def all_engines(path: Path | None = None) -> list[Engine]:
