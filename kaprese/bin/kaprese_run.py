@@ -114,6 +114,12 @@ def main(
         "--delete-runner", action="store_true", help="delete runner image after running"
     )
     parser.add_argument(
+        "-o",
+        "--output",
+        default="kaprese-out",
+        help="output directory (default=%(default)s)",
+    )
+    parser.add_argument(
         "-e",
         "--engine",
         nargs="*",
@@ -185,8 +191,8 @@ def main(
                 )
                 continue
             status.start()
-            logger.info(f"Running {bench.name} on {engine.name}")
-            runner = Runner(bench, engine)
+            logger.info('Running "%s" on "%s"', bench.name, engine.name)
+            runner = Runner(bench, engine, args.output)
             result = runner.run(delete_runner=args.delete_runner)
             status.done(result)
         pannel_console.print(":party_popper: Done! Press Ctrl+C to exit.")

@@ -11,5 +11,15 @@ def register_saver(overwrite: bool = False) -> None:
         build_args={
             "BENCHMARK_IMAGE": "{benchmark.image}",
         },
+        exec_commands=[
+            "make clean -j$(nproc) >/dev/null",
+            "infer capture -- make -j$(nproc) >/dev/null",
+            "infer saver --error-report report.json $([ -e api.json ] && --resource-api-spec api.json)",
+            "export RETURN_CODE=$?",
+            "touch {runner.mount_dir}/test.txt",
+            "cp -r infer-out/* {runner.mount_dir}/",
+            "chown -R {runner.uid}:{runner.gid} {runner.mount_dir}",
+            "exit $RETURN_CODE",
+        ],
     )
     saver.register(overwrite=overwrite)

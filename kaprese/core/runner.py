@@ -1,13 +1,34 @@
+import os
+from pathlib import Path
+from typing import Generator
+
 from kaprese.core.benchmark import Benchmark
 from kaprese.core.engine import Engine
-from kaprese.utils.docker import build_image, delete_image, image_exists, pull_image
+from kaprese.utils.docker import (build_image, delete_image, image_exists,
+                                  pull_image, run_commands_stream)
 from kaprese.utils.logging import logger
 
 
 class Runner:
-    def __init__(self, benchmark: Benchmark, engine: Engine):
+    def __init__(
+        self, benchmark: Benchmark, engine: Engine, output_dir: str | None = None
+    ):
         self.benchmark = benchmark
         self.engine = engine
+        self.output_dir = Path(
+            f"{output_dir or 'kaprese-out'}/{engine.name}/{benchmark.name}"
+        )
+        self.uid = os.getuid()
+        self.gid = os.getgid()
+        self.mount_dir = Path(self.benchmark.workdir or "/") / "kaprese-out"
+
+        if self.output_dir.exists():
+            logger.warning(
+                'Output directory "%s" already exists, '
+                "the results may be overwritten",
+                self.output_dir,
+            )
+        self.output_dir.mkdir(parents=True, exist_ok=True)
 
     def run(self, *, delete_runner: bool = False) -> bool:
         if not self.benchmark.ready:
@@ -48,11 +69,55 @@ class Runner:
             self.engine.name,
         )
 
+        commands = (
+            [self.engine.exec_commands]
+            if isinstance(self.engine.exec_commands, str)
+            else self.engine.exec_commands
+        )
+        if isinstance(commands, list):
+            commands = [self._process_command(c) for c in commands]
+
+        result = True
+        with run_commands_stream(
+            runner_image_tag,
+            commands,
+            workdir=self.benchmark.workdir,
+            mount={self.output_dir: self.mount_dir},
+        ) as stream:
+            if stream is None:
+                result = False
+            else:
+
+                def return_handler(
+                    stream: Generator[bytes, None, int]
+                ) -> Generator[bytes, None, None]:
+                    nonlocal result
+                    out = yield from stream
+                    result = result and (out == 0)
+
+                for line in return_handler(stream):
+                    logger.debug(
+                        "Runner(%s, %s) %s",
+                        self.engine.name,
+                        self.benchmark.name,
+                        line.decode().strip("\n"),
+                    )
+
         if delete_runner:
             logger.info('Deleting runner image "%s"', runner_image_tag)
             delete_image(runner_image_tag)
 
-        return True
+        return result
+
+    def _format(self, s: str) -> str:
+        return s.format(
+            benchmark=self.benchmark,
+            engine=self.engine,
+            runner=self,
+        )
 
     def _process_build_args(self, build_args: dict[str, str]) -> dict[str, str]:
-        return {k: v.format(benchmark=self.benchmark) for k, v in build_args.items()}
+        return {k: self._format(v) for k, v in build_args.items()}
+
+    def _process_command(self, command: str) -> str:
+        return self._format(command)

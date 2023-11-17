@@ -24,6 +24,7 @@ class Engine:
     image: str = ""
     location: str | None = dataclasses.field(default=None, repr=False)
     build_args: dict[str, str] = dataclasses.field(default_factory=dict, repr=False)
+    exec_commands: list[str] | str | None = None
 
     def __post_init__(self) -> None:
         if len(self.image) == 0:
