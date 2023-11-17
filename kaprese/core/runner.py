@@ -31,7 +31,8 @@ class Runner:
                     )
 
                     return False
-                if build_image(runner_image_tag, self.engine.location):
+                build_args = self._process_build_args(self.engine.build_args)
+                if build_image(runner_image_tag, self.engine.location, build_args):
                     logger.info('Built runner image "%s"', runner_image_tag)
                 else:
                     logger.warning(
@@ -52,3 +53,6 @@ class Runner:
             delete_image(runner_image_tag)
 
         return True
+
+    def _process_build_args(self, build_args: dict[str, str]) -> dict[str, str]:
+        return {k: v.format(benchmark=self.benchmark) for k, v in build_args.items()}

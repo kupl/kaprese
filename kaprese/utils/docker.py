@@ -38,17 +38,27 @@ def delete_image(name: str) -> None:
     client.images.remove(name)  # type: ignore
 
 
-def build_image(name: str, basedir: str) -> bool:
+def build_image(
+    name: str, basedir: str, build_args: dict[str, str] | None = None
+) -> bool:
     client = get_docker_client()
+    if build_args is None:
+        build_args = {}
     try:
+        logger.debug("Building image %s", name)
+        logger.debug("  path: %s", basedir)
+        logger.debug("  tag: %s", name)
+        logger.debug("  buildargs: %s", build_args)
         image, _ = client.images.build(  # type: ignore
             path=basedir,
             tag=name,
+            buildargs=build_args,
             rm=True,
             forcerm=True,
         )
         return image is not None
-    except (BuildError, APIError):
+    except (BuildError, APIError) as e:
+        logger.debug(e)
         return False
 
 

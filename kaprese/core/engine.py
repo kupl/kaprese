@@ -23,6 +23,7 @@ class Engine:
     supported_os: list[str] = dataclasses.field(default_factory=list)
     image: str = ""
     location: str | None = dataclasses.field(default=None, repr=False)
+    build_args: dict[str, str] = dataclasses.field(default_factory=dict, repr=False)
 
     def __post_init__(self) -> None:
         if len(self.image) == 0:
