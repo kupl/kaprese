@@ -135,7 +135,7 @@ def main(
     for engine_name in args.engine:
         engine = Engine.load(engine_name)
         if engine is None:
-            logger.warning(f'Engine "{engine_name}" not found')
+            logger.warning('Engine "%s" not found', engine_name)
             console.print(f'Engine "{engine_name}" not found (ignored)')
             continue
         engines.append(engine)
@@ -143,7 +143,7 @@ def main(
     for bench_name in args.benchmark:
         bench = Benchmark.load(bench_name)
         if bench is None:
-            logger.warning(f'Benchmark "{bench_name}" not found')
+            logger.warning('Benchmark "%s" not found', bench_name)
             console.print(f'Benchmark "{bench_name}" not found (ignored)')
             continue
         benchmarks.append(bench)

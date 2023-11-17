@@ -11,10 +11,10 @@ class Runner:
 
     def run(self, *, delete_runner: bool = False) -> bool:
         if not self.benchmark.ready:
-            logger.info('Trying to pull benchmark "%s"', self.benchmark.name)
-            self.benchmark.pull()
+            logger.info('Trying to prepare benchmark "%s"', self.benchmark.name)
+            self.benchmark.prepare()
         if not self.benchmark.ready:
-            logger.error('Failed to pull benchmark "%s"', self.benchmark.name)
+            logger.error('Failed to prepare benchmark "%s"', self.benchmark.name)
             return False
 
         runner_image_tag = f"{self.engine.image}:{self.benchmark.name}"

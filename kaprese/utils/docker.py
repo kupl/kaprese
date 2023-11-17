@@ -42,14 +42,14 @@ def delete_image(name: str) -> None:
 def build_image(
     name: str, basedir: str, build_args: dict[str, str] | None = None
 ) -> bool:
+    logger.debug('Building image "%s"', name)
+    logger.debug("  path: %s", basedir)
+    logger.debug("  tag: %s", name)
+    logger.debug("  buildargs: %s", build_args)
     client = get_docker_client()
     if build_args is None:
         build_args = {}
     try:
-        logger.debug('Building image "%s"', name)
-        logger.debug("  path: %s", basedir)
-        logger.debug("  tag: %s", name)
-        logger.debug("  buildargs: %s", build_args)
         image, _ = client.images.build(  # type: ignore
             path=basedir,
             tag=name,
