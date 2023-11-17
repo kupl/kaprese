@@ -1,11 +1,15 @@
 import os
 from pathlib import Path
-from typing import Generator
 
 from kaprese.core.benchmark import Benchmark
 from kaprese.core.engine import Engine
-from kaprese.utils.docker import (build_image, delete_image, image_exists,
-                                  pull_image, run_commands_stream)
+from kaprese.utils.docker import (
+    build_image,
+    delete_image,
+    image_exists,
+    pull_image,
+    run_commands_stream,
+)
 from kaprese.utils.logging import logger
 
 
@@ -87,15 +91,7 @@ class Runner:
             if stream is None:
                 result = False
             else:
-
-                def return_handler(
-                    stream: Generator[bytes, None, int]
-                ) -> Generator[bytes, None, None]:
-                    nonlocal result
-                    out = yield from stream
-                    result = result and (out == 0)
-
-                for line in return_handler(stream):
+                for line in stream:
                     logger.debug(
                         "Runner(%s, %s) %s",
                         self.engine.name,

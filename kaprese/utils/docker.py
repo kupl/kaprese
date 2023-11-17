@@ -149,7 +149,6 @@ def run_command_stream(
             container: Container = client.containers.run(image, **kwargs)  # type: ignore
             yield container.logs(stream=True)  # type: ignore
             container.stop()  # type: ignore
-            result = container.wait()  # type: ignore
             container.remove()  # type: ignore
         except ContainerError as e:
             logger.debug('Failed to run command "%s" in image "%s"', command, image)
