@@ -24,8 +24,8 @@ class Benchmark:
     workdir_command: str | None = dataclasses.field(default=None, repr=False)
 
     # Internal fields
-    _availablility: bool = dataclasses.field(init=False, default=False, repr=False)
-    _os: str | None = dataclasses.field(init=False, default=None, repr=False)
+    _availablility: bool = dataclasses.field(default=False, repr=False)
+    _os: str | None = dataclasses.field(default=None, repr=False)
 
     @property
     def availability(self) -> bool:
@@ -88,9 +88,12 @@ class Benchmark:
         logger.info(f"Cleaning up benchmark {self.name}")
         if self.language_command is not None:
             self._language = None
-        self._availablility = False
+        if self.workdir_command is not None:
+            self._workdir = None
         if delete_image and self.availability:
             docker_delete_image(self.image)
+        self._availablility = False
+        self._os = None
         return self
 
     def register(self, *, overwrite: bool = False) -> None:
