@@ -32,7 +32,7 @@ def pull_image(name: str) -> bool:
 
 def delete_image(name: str) -> None:
     if not image_exists(name):
-        logger.error('Image "%s" does not exist', name)
+        logger.debug('Image "%s" does not exist', name)
         return
     logger.debug('Deleting image "%s"', name)
     client = get_docker_client()
@@ -46,7 +46,7 @@ def build_image(
     if build_args is None:
         build_args = {}
     try:
-        logger.debug("Building image %s", name)
+        logger.debug('Building image "%s"', name)
         logger.debug("  path: %s", basedir)
         logger.debug("  tag: %s", name)
         logger.debug("  buildargs: %s", build_args)
@@ -59,6 +59,7 @@ def build_image(
         )
         return image is not None
     except (BuildError, APIError) as e:
+        logger.debug('Failed to build image "%s"', name)
         logger.debug(e)
         return False
 
@@ -78,8 +79,8 @@ def run_command(image: str, command: str | None) -> str | None:
         )
         return out.decode()
     except ContainerError as e:
+        logger.debug('Failed to run command "%s" in image "%s"', command, image)
         logger.debug(e)
-        logger.error('Failed to run command "%s" in image "%s"', command, image)
     return None
 
 
