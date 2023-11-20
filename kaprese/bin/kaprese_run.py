@@ -1,5 +1,6 @@
 import argparse
 import logging
+from datetime import datetime
 from itertools import product
 from time import sleep
 from typing import Literal, Union
@@ -31,18 +32,22 @@ class _RunnerStatus:
             Literal["Not supported"],
             Literal["OK"],
             Literal["Failed"],
-        ] = "Checking"
+        ] = "Pending"
+        self._spinner = None
+
+    def check_start(self) -> None:
+        self._status = "Checking"
         self._spinner = Spinner("dots", "Checking...")
 
-    def check(self, passed: bool) -> None:
+    def check_done(self, passed: bool) -> None:
         self._status = "Pending" if passed else "Not supported"
         self._spinner = None
 
-    def start(self) -> None:
+    def run_start(self) -> None:
         self._status = "Running"
         self._spinner = Spinner("dots", "Running...")
 
-    def done(self, result: bool) -> None:
+    def run_done(self, result: bool) -> None:
         self._status = "OK" if result else "Failed"
         self._spinner = None
 
@@ -69,40 +74,99 @@ class _RunnerStatus:
             return Measurement(len(self._status), len(self._status))
 
 
-class _TablePlaceholder:
+class _TextCell:
     def __init__(self) -> None:
-        self.msg = None
+        self.text = None
 
     def __rich_console__(
         self, console: Console, options: ConsoleOptions
     ) -> RenderResult:
-        yield Text(self.msg) if self.msg is not None else Text("n/a", style="grey23")
+        yield Text(self.text) if self.text is not None else Text("n/a", style="grey23")
 
     def __rich_measure__(
         self, console: Console, options: ConsoleOptions
     ) -> Measurement:
         return (
-            Measurement(len(self.msg), len(self.msg))
-            if self.msg is not None
+            Measurement(len(self.text), len(self.text))
+            if self.text is not None
             else Measurement(3, 3)
         )
 
-    def set_message(self, msg: str) -> None:
-        self.msg = msg
+    def set_text(self, text: str) -> None:
+        self.text = text
+
+
+class _Timer:
+    def __init__(self) -> None:
+        self.start_time = None
+        self.elapsed_time = None
+
+    def __rich_console__(
+        self, console: Console, options: ConsoleOptions
+    ) -> RenderResult:
+        elapsed = self._elapsed
+        if elapsed is None:
+            yield Text("n/a", style="grey23")
+        else:
+            yield Text(elapsed)
+
+    def __rich_measure__(
+        self, console: Console, options: ConsoleOptions
+    ) -> Measurement:
+        elapsed = self._elapsed
+        if elapsed is None:
+            return Measurement(3, 3)
+        else:
+            size = len(elapsed)
+            return Measurement(size, size)
+
+    def start_timer(self) -> None:
+        self.start_time = datetime.now()
+
+    def stop_timer(self) -> None:
+        self.elapsed_time = (
+            (datetime.now() - self.start_time) if self.start_time is not None else None
+        )
+
+    @property
+    def _elapsed(self) -> str | None:
+        elapsed = (
+            self.elapsed_time
+            if self.elapsed_time is not None
+            else (
+                datetime.now() - self.start_time
+                if self.start_time is not None
+                else None
+            )
+        )
+        if elapsed is None:
+            return None
+        else:
+            t, ms = str(elapsed).split(".")
+            return f"{t}.{ms[:2]}"
 
 
 class _SummaryTable:
     def __init__(self, title: str = "kaprese running summary") -> None:
         self._title = title
-        self._columns = ["Engine", "Benchmark", "Status", "Output directory"]
-        self._rows: list[tuple[str, str, str, _RunnerStatus, _TablePlaceholder]] = []
+        self._rows: list[
+            tuple[
+                str,
+                str,
+                str,
+                _RunnerStatus,
+                _TextCell,
+                _Timer,
+            ]
+        ] = []
 
     def add_row(
         self,
         engine: str,
         benchmark: str,
         status: _RunnerStatus,
-        output_dir: _TablePlaceholder,
+        output_dir: _TextCell,
+        elapsed_time: _Timer,
     ) -> None:
         self._rows.append(
             (
@@ -111,6 +175,7 @@ class _SummaryTable:
                 benchmark,
                 status,
                 output_dir,
+                elapsed_time,
             )
         )
 
@@ -123,6 +188,7 @@ class _SummaryTable:
         table.add_column("Benchmark", justify="left")
         table.add_column("Status", justify="left")
         table.add_column("Output directory", justify="left")
+        table.add_column("Elapsed time", justify="left")
         for row in self._rows[-(options.max_height - 5) :]:
             table.add_row(*row)
         yield table
@@ -135,6 +201,7 @@ class _SummaryTable:
         table.add_column("Benchmark", justify="left")
         table.add_column("Status", justify="left")
         table.add_column("Output directory", justify="left")
+        table.add_column("Elapsed time", justify="left")
         for row in self._rows:
             table.add_row(*row)
         return table
@@ -208,7 +275,7 @@ def main(
     table = _SummaryTable(title="kaprese running summary")
     layout["summary"].update(Align.center(table, vertical="middle"))
 
-    logger.removeHandler(logger.handlers[0])
+    # logger.removeHandler(logger.handlers[0])
     pannel_console = PanelConsole()
     handler = RichHandler(console=pannel_console, show_path=False)
     handler.setFormatter(logging.Formatter(fmt=FORMAT, datefmt=DATE_FORMAT))
@@ -217,16 +284,21 @@ def main(
 
     with Live(layout, console=console, screen=True, refresh_per_second=12.5):
         for engine, bench in product(engines, benchmarks):
+            # Make row in summary table
             status = _RunnerStatus()
-            output_dir = _TablePlaceholder()
-            table.add_row(engine.name, bench.name, status, output_dir)
+            output_dir = _TextCell()
+            elapsed_time = _Timer()
+            table.add_row(engine.name, bench.name, status, output_dir, elapsed_time)
+
+            # Start checking
+            status.check_start()
             if not bench.ready:
                 logger.info(
-                    'Benchmark "%s" not prepared, ' "trying to prepare it", bench.name
+                    'Benchmark "%s" not prepared, trying to prepare it', bench.name
                 )
                 bench.prepare()
             support_check = engine.support(bench)
-            status.check(support_check)
+            status.check_done(support_check)
             if not support_check:
                 logger.warning(
                     'Engine "%s" does not support benchmark "%s"',
@@ -234,12 +306,21 @@ def main(
                     bench.name,
                 )
                 continue
-            status.start()
-            logger.info('Running "%s" on "%s"', bench.name, engine.name)
+
+            # Start running
             runner = Runner(bench, engine, args.output)
-            output_dir.set_message(str(runner.output_dir))
+            logger.info('Running "%s" on "%s"', bench.name, engine.name)
+            status.run_start()
+            output_dir.set_text(str(runner.output_dir))
+            elapsed_time.start_timer()
+
+            # Actual run
             result = runner.run(delete_runner=args.delete_runner)
-            status.done(result)
+
+            # Finish running
+            elapsed_time.stop_timer()
+            status.run_done(result)
+
         pannel_console.print(":party_popper: Done! Press Ctrl+C to exit.")
         try:
             while True:

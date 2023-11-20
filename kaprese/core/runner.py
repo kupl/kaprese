@@ -1,3 +1,4 @@
+import datetime
 import os
 from pathlib import Path
 
@@ -19,6 +20,7 @@ class Runner:
     ):
         self.benchmark = benchmark
         self.engine = engine
+
         self.output_dir = Path(
             f"{output_dir or 'kaprese-out'}/{engine.name}/{benchmark.name}"
         )
@@ -34,7 +36,24 @@ class Runner:
             )
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
+        self._start_time = None
+        self._end_time = None
+
+    @property
+    def elapsed_time(self) -> datetime.timedelta | None:
+        if self._start_time is None:
+            return None
+        return (self._end_time or datetime.datetime.now()) - self._start_time
+
     def run(self, *, delete_runner: bool = False) -> bool:
+        self._start_time = datetime.datetime.now()
+        logger.info(
+            "Starting runner(%s, %s) at %s",
+            self.engine.name,
+            self.benchmark.name,
+            self._start_time,
+        )
+
         if not self.benchmark.ready:
             logger.info('Trying to prepare benchmark "%s"', self.benchmark.name)
             self.benchmark.prepare()
@@ -101,9 +120,13 @@ class Runner:
             delete_image(runner_image_tag)
 
         self._end_time = datetime.datetime.now()
-        logger.debug(result.return_code)
-        logger.debug(type(result.return_code))
-
+        logger.info(
+            "Finished runner(%s, %s) at %s (elapsed time: %s)",
+            self.engine.name,
+            self.benchmark.name,
+            self._end_time,
+            self.elapsed_time,
+        )
         return code == 0 if (code := result.return_code) is not None else False
 
     def _format(self, s: str) -> str:
