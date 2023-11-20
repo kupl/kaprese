@@ -134,6 +134,7 @@ class _SummaryTable:
         table.add_column("Engine", justify="left")
         table.add_column("Benchmark", justify="left")
         table.add_column("Status", justify="left")
+        table.add_column("Output directory", justify="left")
         for row in self._rows:
             table.add_row(*row)
         return table
