@@ -81,30 +81,30 @@ class Runner:
         if isinstance(commands, list):
             commands = [self._process_command(c) for c in commands]
 
-        result = True
         with run_commands_stream(
             runner_image_tag,
             commands,
             workdir=self.benchmark.workdir,
             mount={self.output_dir: self.mount_dir},
-        ) as (stream, status):
-            if stream is None:
-                result = False
-            else:
-                for line in stream:
+        ) as result:
+            if result.stream is not None:
+                for line in result.stream:
                     logger.debug(
                         "Runner(%s, %s) %s",
                         self.engine.name,
                         self.benchmark.name,
                         line.decode().strip("\n"),
                     )
-                result = status["StatusCode"] == 0
 
         if delete_runner:
             logger.info('Deleting runner image "%s"', runner_image_tag)
             delete_image(runner_image_tag)
 
-        return result
+        self._end_time = datetime.datetime.now()
+        logger.debug(result.return_code)
+        logger.debug(type(result.return_code))
+
+        return code == 0 if (code := result.return_code) is not None else False
 
     def _format(self, s: str) -> str:
         return s.format(

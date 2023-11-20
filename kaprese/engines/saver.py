@@ -14,12 +14,11 @@ def register_saver(overwrite: bool = False) -> None:
         exec_commands=[
             "make clean -j$(nproc) >/dev/null",
             "infer capture -- make -j$(nproc) >/dev/null",
-            "infer saver --error-report report.json $([ -e api.json ] && --resource-api-spec api.json)",
+            'infer saver --error-report report.json $([ -e api.json ] && echo \\"--resource-api-spec api.json\\")',
             "export RETURN_CODE=$?",
-            "touch {runner.mount_dir}/test.txt",
             "cp -r infer-out/* {runner.mount_dir}/",
             "chown -R {runner.uid}:{runner.gid} {runner.mount_dir}",
-            "exit $RETURN_CODE",
+            "exit $([ $RETURN_CODE -eq 106 ] && echo 0 || echo $RETURN_CODE)",
         ],
     )
     saver.register(overwrite=overwrite)

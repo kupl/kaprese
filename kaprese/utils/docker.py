@@ -1,7 +1,7 @@
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, TypedDict, cast
+from typing import Any, cast
 
 from docker.client import DockerClient  # type: ignore
 from docker.errors import APIError  # type: ignore
@@ -113,8 +113,10 @@ def _make_mount_dict(mount: dict[Path | str, Path | str]) -> dict[str, dict[str,
     }
 
 
-class DockerExitStatus(TypedDict):
-    StatusCode: int | None
+class DockerStreamResult:
+    def __init__(self) -> None:
+        self.stream: Generator[bytes, None, None] | None = None
+        self.return_code: int | None = None
 
 
 @contextmanager
@@ -123,21 +125,18 @@ def run_command_stream(
     command: str | None,
     workdir: str | None = None,
     mount: dict[Path | str, Path | str] | None = None,
-) -> Generator[
-    tuple[Generator[bytes, None, None] | None, DockerExitStatus], None, None
-]:
+) -> Generator[DockerStreamResult, None, None]:
     logger.debug("Running commands stream")
     logger.debug("  image: %s", image)
     logger.debug("  command: %s", command)
     logger.debug("  workdir: %s", workdir)
     logger.debug("  mount: %s", mount)
     client = get_docker_client()
-    exit_status = DockerExitStatus(
-        StatusCode=None,
-    )
+
+    result = DockerStreamResult()
     if not image_exists(image):
         logger.debug('Image "%s" does not exist', image)
-        yield None, exit_status
+        yield result
     else:
         try:
             kwargs: dict[str, Any] = {}
@@ -157,10 +156,14 @@ def run_command_stream(
             )
             container: Container = client.containers.run(image, **kwargs)  # type: ignore
 
-            yield container.logs(stream=True), exit_status #type: ignore
+            result.stream = cast(
+                Generator[bytes, None, None],
+                container.logs(stream=True),  # type: ignore
+            )
+            yield result
             container.stop()  # type: ignore
-            result = cast(dict[str, Any], container.wait())  # type: ignore
-            exit_status["StatusCode"] = result["StatusCode"]
+            container_status = cast(dict[str, Any], container.wait())  # type: ignore
+            result.return_code = container_status["StatusCode"]
             container.remove()  # type: ignore
         except ContainerError as e:
             logger.debug('Failed to run command "%s" in image "%s"', command, image)
@@ -174,10 +177,8 @@ def run_commands_stream(
     commands: list[str] | None,
     workdir: str | None = None,
     mount: dict[Path | str, Path | str] | None = None,
-) -> Generator[
-    tuple[Generator[bytes, None, None] | None, DockerExitStatus], None, None
-]:
+) -> Generator[DockerStreamResult, None, None]:
     command = "; ".join(commands) if commands is not None else None
-    with run_command_stream(image, command, workdir, mount) as ret:
-        yield ret
+    with run_command_stream(image, command, workdir, mount) as result:
+        yield result
     return None
