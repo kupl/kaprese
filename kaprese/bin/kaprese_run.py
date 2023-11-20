@@ -50,7 +50,7 @@ class _RunnerStatus:
         self, console: Console, options: ConsoleOptions
     ) -> RenderResult:
         if self._status == "Pending":
-            return Text(self._status, style="grey23")
+            yield Text(self._status, style="grey23")
         elif self._status == "Running" or self._status == "Checking":
             yield self._spinner.render(
                 console.get_time()
@@ -69,14 +69,50 @@ class _RunnerStatus:
             return Measurement(len(self._status), len(self._status))
 
 
+class _TablePlaceholder:
+    def __init__(self) -> None:
+        self.msg = None
+
+    def __rich_console__(
+        self, console: Console, options: ConsoleOptions
+    ) -> RenderResult:
+        yield Text(self.msg) if self.msg is not None else Text("n/a", style="grey23")
+
+    def __rich_measure__(
+        self, console: Console, options: ConsoleOptions
+    ) -> Measurement:
+        return (
+            Measurement(len(self.msg), len(self.msg))
+            if self.msg is not None
+            else Measurement(3, 3)
+        )
+
+    def set_message(self, msg: str) -> None:
+        self.msg = msg
+
+
 class _SummaryTable:
     def __init__(self, title: str = "kaprese running summary") -> None:
         self._title = title
-        self._columns = ["Engine", "Benchmark", "Status"]
-        self._rows: list[tuple[str, str, str, _RunnerStatus]] = []
+        self._columns = ["Engine", "Benchmark", "Status", "Output directory"]
+        self._rows: list[tuple[str, str, str, _RunnerStatus, _TablePlaceholder]] = []
 
-    def add_row(self, engine: str, benchmark: str, status: _RunnerStatus) -> None:
-        self._rows.append((str(len(self._rows) + 1), engine, benchmark, status))
+    def add_row(
+        self,
+        engine: str,
+        benchmark: str,
+        status: _RunnerStatus,
+        output_dir: _TablePlaceholder,
+    ) -> None:
+        self._rows.append(
+            (
+                str(len(self._rows) + 1),
+                engine,
+                benchmark,
+                status,
+                output_dir,
+            )
+        )
 
     def __rich_console__(
         self, console: Console, options: ConsoleOptions
@@ -86,6 +122,7 @@ class _SummaryTable:
         table.add_column("Engine", justify="left")
         table.add_column("Benchmark", justify="left")
         table.add_column("Status", justify="left")
+        table.add_column("Output directory", justify="left")
         for row in self._rows[-(options.max_height - 5) :]:
             table.add_row(*row)
         yield table
@@ -180,7 +217,8 @@ def main(
     with Live(layout, console=console, screen=True, refresh_per_second=12.5):
         for engine, bench in product(engines, benchmarks):
             status = _RunnerStatus()
-            table.add_row(engine.name, bench.name, status)
+            output_dir = _TablePlaceholder()
+            table.add_row(engine.name, bench.name, status, output_dir)
             if not bench.ready:
                 logger.info(
                     'Benchmark "%s" not prepared, ' "trying to prepare it", bench.name
@@ -198,6 +236,7 @@ def main(
             status.start()
             logger.info('Running "%s" on "%s"', bench.name, engine.name)
             runner = Runner(bench, engine, args.output)
+            output_dir.set_message(str(runner.output_dir))
             result = runner.run(delete_runner=args.delete_runner)
             status.done(result)
         pannel_console.print(":party_popper: Done! Press Ctrl+C to exit.")
