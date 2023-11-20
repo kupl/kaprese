@@ -84,6 +84,7 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
             table.add_column("availability", justify="left")
             table.add_column("language", justify="left")
             table.add_column("os", justify="left")
+            table.add_column("workdir", justify="left")
 
             with console.status("") as status:
                 for i, benchmark in enumerate(all := all_benchmarks()):
@@ -97,7 +98,10 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
                         language
                         if (language := benchmark.language)
                         else "[grey23]n/a[/grey23]",
-                        os if (os := benchmark.os) else "[grey23]unknown[/grey23]",
+                        os if (os := benchmark.os) else "[grey23]n/a[/grey23]",
+                        workdir
+                        if (workdir := benchmark.workdir)
+                        else "[grey23]n/a[/grey23]",
                     )
             console.print(table)
 

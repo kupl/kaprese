@@ -20,10 +20,12 @@ class Benchmark:
     image: str
     _language: str | None = None
     language_command: str | None = dataclasses.field(default=None, repr=False)
+    _workdir: str | None = dataclasses.field(default=None, repr=False)
+    workdir_command: str | None = dataclasses.field(default=None, repr=False)
 
     # Internal fields
-    _availablility: bool = dataclasses.field(init=False, default=False, repr=False)
-    _os: str | None = dataclasses.field(init=False, default=None, repr=False)
+    _availablility: bool = dataclasses.field(default=False, repr=False)
+    _os: str | None = dataclasses.field(default=None, repr=False)
 
     @property
     def availability(self) -> bool:
@@ -39,6 +41,15 @@ class Benchmark:
                 out = out.strip()
             self._language = out
         return self._language
+
+    @property
+    def workdir(self) -> str | None:
+        if self._workdir is None and self.availability:
+            out = run_command(self.image, self.workdir_command)
+            if out is not None:
+                out = out.strip()
+            self._workdir = out
+        return self._workdir
 
     @property
     def os(self) -> str | None:
@@ -58,6 +69,15 @@ class Benchmark:
     def ready(self) -> bool:
         return self.availability and self.language is not None
 
+    def prepare(self, *, force: bool = False) -> Benchmark:
+        if not self.availability or force:
+            self.pull(force=force)
+        if self.availability:
+            self.language
+            self.workdir
+            self.os
+        return self
+
     def pull(self, *, force: bool = False) -> Benchmark:
         if not self.availability or force:
             logger.info(f"Pulling benchmark {self.name}")
@@ -68,9 +88,12 @@ class Benchmark:
         logger.info(f"Cleaning up benchmark {self.name}")
         if self.language_command is not None:
             self._language = None
-        self._availablility = False
+        if self.workdir_command is not None:
+            self._workdir = None
         if delete_image and self.availability:
             docker_delete_image(self.image)
+        self._availablility = False
+        self._os = None
         return self
 
     def register(self, *, overwrite: bool = False) -> None:
@@ -98,7 +121,6 @@ class Benchmark:
     def load(cls, name: str) -> Benchmark | None:
         benchmark_file = _get_benchmark_path() / f"{name}.json"
         if not benchmark_file.exists():
-            logger.warning(f"Benchmark {name} does not exist")
             return None
         return cls(**json.loads(benchmark_file.read_text()))
 
