@@ -11,7 +11,7 @@ from kaprese.utils.docker import (
     pull_image,
     run_commands_stream,
 )
-from kaprese.utils.logging import logger
+from kaprese.utils.logging import enable_filelogging, logger
 
 
 class Runner:
@@ -46,88 +46,91 @@ class Runner:
         return (self._end_time or datetime.datetime.now()) - self._start_time
 
     def run(self, *, delete_runner: bool = False) -> bool:
-        self._start_time = datetime.datetime.now()
-        logger.info(
-            "Starting runner(%s, %s) at %s",
-            self.engine.name,
-            self.benchmark.name,
-            self._start_time,
-        )
+        with enable_filelogging(self.output_dir / "kaprese.log"):
+            self._start_time = datetime.datetime.now()
+            logger.info(
+                "Starting runner(%s, %s) at %s",
+                self.engine.name,
+                self.benchmark.name,
+                self._start_time,
+            )
 
-        if not self.benchmark.ready:
-            logger.info('Trying to prepare benchmark "%s"', self.benchmark.name)
-            self.benchmark.prepare()
-        if not self.benchmark.ready:
-            logger.error('Failed to prepare benchmark "%s"', self.benchmark.name)
-            return False
+            if not self.benchmark.ready:
+                logger.info('Trying to prepare benchmark "%s"', self.benchmark.name)
+                self.benchmark.prepare()
+            if not self.benchmark.ready:
+                logger.error('Failed to prepare benchmark "%s"', self.benchmark.name)
+                return False
 
-        runner_image_tag = f"{self.engine.image}:{self.benchmark.name}"
-        if not image_exists(runner_image_tag):
-            logger.info('Trying to pull or build engine image "%s"', self.engine.image)
-            if pull_image(runner_image_tag):
-                logger.info('Pulled runner image "%s"', runner_image_tag)
-            else:
-                logger.info('No prebuilt runner image "%s"', runner_image_tag)
-                if self.engine.location is None:
-                    logger.error(
-                        'Failed to pull runner image "%s": no engine location provided',
-                        runner_image_tag,
-                    )
-
-                    return False
-                build_args = self._process_build_args(self.engine.build_args)
-                if build_image(runner_image_tag, self.engine.location, build_args):
-                    logger.info('Built runner image "%s"', runner_image_tag)
+            runner_image_tag = f"{self.engine.image}:{self.benchmark.name}"
+            if not image_exists(runner_image_tag):
+                logger.info(
+                    'Trying to pull or build engine image "%s"', self.engine.image
+                )
+                if pull_image(runner_image_tag):
+                    logger.info('Pulled runner image "%s"', runner_image_tag)
                 else:
-                    logger.warning(
-                        'Failed to build runner image "%s": maybe wrong location? (current=%s)',
-                        runner_image_tag,
-                        self.engine.location,
-                    )
-                    return False
+                    logger.info('No prebuilt runner image "%s"', runner_image_tag)
+                    if self.engine.location is None:
+                        logger.error(
+                            'Failed to pull runner image "%s": no engine location provided',
+                            runner_image_tag,
+                        )
 
-        logger.info(
-            'Running benchmark "%s" with engine "%s"',
-            self.benchmark.name,
-            self.engine.name,
-        )
+                        return False
+                    build_args = self._process_build_args(self.engine.build_args)
+                    if build_image(runner_image_tag, self.engine.location, build_args):
+                        logger.info('Built runner image "%s"', runner_image_tag)
+                    else:
+                        logger.warning(
+                            'Failed to build runner image "%s": maybe wrong location? (current=%s)',
+                            runner_image_tag,
+                            self.engine.location,
+                        )
+                        return False
 
-        commands = (
-            [self.engine.exec_commands]
-            if isinstance(self.engine.exec_commands, str)
-            else self.engine.exec_commands
-        )
-        if isinstance(commands, list):
-            commands = [self._process_command(c) for c in commands]
+            logger.info(
+                'Running benchmark "%s" with engine "%s"',
+                self.benchmark.name,
+                self.engine.name,
+            )
 
-        with run_commands_stream(
-            runner_image_tag,
-            commands,
-            workdir=self.benchmark.workdir,
-            mount={self.output_dir: self.mount_dir},
-        ) as result:
-            if result.stream is not None:
-                for line in result.stream:
-                    logger.debug(
-                        "Runner(%s, %s) %s",
-                        self.engine.name,
-                        self.benchmark.name,
-                        line.decode().strip("\n"),
-                    )
+            commands = (
+                [self.engine.exec_commands]
+                if isinstance(self.engine.exec_commands, str)
+                else self.engine.exec_commands
+            )
+            if isinstance(commands, list):
+                commands = [self._process_command(c) for c in commands]
 
-        if delete_runner:
-            logger.info('Deleting runner image "%s"', runner_image_tag)
-            delete_image(runner_image_tag)
+            with run_commands_stream(
+                runner_image_tag,
+                commands,
+                workdir=self.benchmark.workdir,
+                mount={self.output_dir: self.mount_dir},
+            ) as result:
+                if result.stream is not None:
+                    for line in result.stream:
+                        logger.debug(
+                            "Runner(%s, %s) %s",
+                            self.engine.name,
+                            self.benchmark.name,
+                            line.decode().strip("\n"),
+                        )
 
-        self._end_time = datetime.datetime.now()
-        logger.info(
-            "Finished runner(%s, %s) at %s (elapsed time: %s)",
-            self.engine.name,
-            self.benchmark.name,
-            self._end_time,
-            self.elapsed_time,
-        )
-        return code == 0 if (code := result.return_code) is not None else False
+            if delete_runner:
+                logger.info('Deleting runner image "%s"', runner_image_tag)
+                delete_image(runner_image_tag)
+
+            self._end_time = datetime.datetime.now()
+            logger.info(
+                "Finished runner(%s, %s) at %s (elapsed time: %s)",
+                self.engine.name,
+                self.benchmark.name,
+                self._end_time,
+                self.elapsed_time,
+            )
+            return code == 0 if (code := result.return_code) is not None else False
 
     def _format(self, s: str) -> str:
         return s.format(

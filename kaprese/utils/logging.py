@@ -1,5 +1,8 @@
 import logging
 import os
+from collections.abc import Generator
+from contextlib import contextmanager
+from pathlib import Path
 
 from rich.logging import RichHandler
 
@@ -19,3 +22,20 @@ _hander.setFormatter(logging.Formatter(fmt=FORMAT, datefmt=DATE_FORMAT))
 logger = logging.getLogger("kaprese")
 logger.addHandler(_hander)
 logger.setLevel(_log_level)
+
+
+@contextmanager
+def enable_filelogging(path: Path | str) -> Generator[None, None, None]:
+    handler = logging.FileHandler(path, mode="w")
+    handler.setFormatter(
+        logging.Formatter(
+            fmt=f"%(asctime)-10s %(levelname)-8s {FORMAT}", datefmt=DATE_FORMAT
+        )
+    )
+    handler.setLevel("INFO" if _log_level != "DEBUG" else _log_level)
+    logger.addHandler(handler)
+    try:
+        yield
+    finally:
+        logger.removeHandler(handler)
+        handler.close()
