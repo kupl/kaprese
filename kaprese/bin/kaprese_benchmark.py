@@ -11,8 +11,14 @@ from kaprese.utils.console import console
 from kaprese.utils.logging import logger
 
 
-def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = None):
-    parser = argparse.ArgumentParser(prog="kaprese benchmark")
+def main(
+    parser: argparse.ArgumentParser,
+    argv: list[str],
+    args: argparse.Namespace,
+) -> None:
+    parser.add_argument(
+        "-h", "--help", action="help", help="show this help message and exit"
+    )
 
     subparsers = parser.add_subparsers(dest="subcommand", metavar="<command>")
 
