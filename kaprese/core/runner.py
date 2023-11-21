@@ -55,13 +55,6 @@ class Runner:
                 self._start_time,
             )
 
-            if not self.benchmark.ready:
-                logger.info('Trying to prepare benchmark "%s"', self.benchmark.name)
-                self.benchmark.prepare()
-            if not self.benchmark.ready:
-                logger.error('Failed to prepare benchmark "%s"', self.benchmark.name)
-                return False
-
             runner_image_tag = f"{self.engine.image}:{self.benchmark.name}"
             if not image_exists(runner_image_tag):
                 logger.info(

@@ -18,19 +18,22 @@ def _get_benchmark_path() -> Path:
 class Benchmark:
     name: str
     image: str
-    _language: str | None = None
     language_command: str | None = dataclasses.field(default=None, repr=False)
-    _workdir: str | None = dataclasses.field(default=None, repr=False)
     workdir_command: str | None = dataclasses.field(default=None, repr=False)
 
-    # Internal fields
-    _availablility: bool = dataclasses.field(default=False, repr=False)
+    # Internal fields, you may set them manually rather than providing commands
+    _availablility: bool = dataclasses.field(default=False, repr=False, init=False)
+    _language: str | None = None
     _os: str | None = dataclasses.field(default=None, repr=False)
+    _workdir: str | None = dataclasses.field(default=None, repr=False)
 
     @property
     def availability(self) -> bool:
-        if not self._availablility:
-            self._availablility = image_exists(self.image)
+        availability = image_exists(self.image)
+        if not availability:
+            self.cleanup()
+            self.register(overwrite=True)
+        self._availablility = availability
         return self._availablility
 
     @property
@@ -65,27 +68,20 @@ class Benchmark:
             self._os = out
         return self._os
 
-    @property
-    def ready(self) -> bool:
-        return self.availability and self.language is not None
-
-    def prepare(self, *, force: bool = False) -> Benchmark:
+    def prepare(self, *, force: bool = False) -> None:
         if not self.availability or force:
             self.pull(force=force)
         if self.availability:
             self.language
             self.workdir
             self.os
-        return self
 
-    def pull(self, *, force: bool = False) -> Benchmark:
+    def pull(self, *, force: bool = False) -> None:
         if not self.availability or force:
-            logger.info(f"Pulling benchmark {self.name}")
             pull_image(self.image)
-        return self
 
-    def cleanup(self, *, delete_image: bool = False) -> Benchmark:
-        logger.info(f"Cleaning up benchmark {self.name}")
+    def cleanup(self, *, delete_image: bool = False) -> None:
+        logger.debug(f'Cleaning up benchmark "{self.name}"')
         if self.language_command is not None:
             self._language = None
         if self.workdir_command is not None:
@@ -94,26 +90,30 @@ class Benchmark:
             docker_delete_image(self.image)
         self._availablility = False
         self._os = None
-        return self
+
+    @property
+    def _file(self) -> Path:
+        return _get_benchmark_path() / f"{self.name}.json"
 
     def register(self, *, overwrite: bool = False) -> None:
-        benchmarks_dir = _get_benchmark_path()
-        if not benchmarks_dir.exists():
-            benchmarks_dir.mkdir(parents=True)
-        benchmark_file = benchmarks_dir / f"{self.name}.json"
-        if benchmark_file.exists():
-            logger.warning(f"Benchmark {self.name} already exists")
-            if not overwrite:
-                return
-            logger.warning("Overwriting benchmark")
-        self.save(benchmark_file)
+        if self._file.exists() and not overwrite:
+            logger.error(f"Benchmark {self.name} already exists")
+            return
+        self._create_file()
 
-    def unregister(self, *, cleanup: bool = False) -> None:
-        if cleanup:
-            self.cleanup()
-        benchmark_file = _get_benchmark_path() / f"{self.name}.json"
+    def _create_file(self) -> None:
+        self._file.parent.mkdir(parents=True, exist_ok=True)
+        self._file.touch(exist_ok=True)
+        self.save()
+
+    def unregister(self, *, delete_image: bool = False) -> None:
+        self.cleanup(delete_image=delete_image)
+        self._delete_file()
+
+    def _delete_file(self) -> None:
+        benchmark_file = self._file
         if not benchmark_file.exists():
-            logger.warning(f"Benchmark {self.name} does not exist")
+            logger.error(f'Benchmark "{self.name}" does not exist')
             return
         benchmark_file.unlink()
 
@@ -124,13 +124,14 @@ class Benchmark:
             return None
         return cls(**json.loads(benchmark_file.read_text()))
 
-    def save(self, path: Path | str) -> None:
-        path = Path(path)
+    def save(self) -> None:
+        benchmark_json = self._file
+        if not benchmark_json.exists():
+            logger.error(f'Benchmark "{self.name}" does not exist')
+            return
         benchmark = dataclasses.asdict(self)
-        if benchmark["_language"] is None:
-            del benchmark["_language"]
         del benchmark["_availablility"]
-        path.write_text(json.dumps(benchmark))
+        benchmark_json.write_text(json.dumps(benchmark))
 
 
 def all_benchmarks(path: Path | None = None) -> list[Benchmark]:
