@@ -109,6 +109,7 @@ def main(
                         if (workdir := benchmark.workdir)
                         else "[grey23]n/a[/grey23]",
                     )
+                    benchmark.save()
             console.print(table)
 
     elif args.subcommand == "preset":
@@ -135,7 +136,7 @@ def main(
         with console.status("") as status:
             for i, bench_name in enumerate(args.benchmark):
                 status.update(
-                    f"[bold green][{i + 1} / {len(args.benchmark)}] Preparing benchmark {bench_name}"
+                    f"[bold green][{i + 1} / {len(args.benchmark)}][/bold green] Preparing benchmark {bench_name}"
                 )
 
                 benchmark = Benchmark.load(bench_name)
@@ -144,13 +145,10 @@ def main(
                     console.print(f'Benchmark "{bench_name}" not found')
                     continue
 
-                if benchmark.ready and not args.force:
-                    console.print(f'Benchmark "{bench_name}" is ready')
-                    continue
-                if args.force and benchmark.ready:
+                if args.force:
                     benchmark.cleanup()
-
                 benchmark.pull(force=args.force)
+
                 if not benchmark.availability:
                     logger.warning(f'Failed to pull benchmark "{bench_name}"')
                     console.print(f'Failed to prepare benchmark "{bench_name}"')
@@ -160,18 +158,20 @@ def main(
                     logger.warning(
                         f'Failed to get language of benchmark "{bench_name}"'
                     )
-                    console.print(f'Failed to prepare benchmark "{bench_name}"')
-                    continue
 
                 if benchmark.os is None:
                     logger.warning(f'Failed to get os of benchmark "{bench_name}"')
 
-                if not benchmark.ready:
-                    logger.warning(f'Failed to prepare benchmark "{bench_name}"')
-                    console.print(f'Failed to prepare benchmark "{bench_name}"')
-                    continue
+                if benchmark.workdir is None:
+                    logger.warning(f'Failed to get workdir of benchmark "{bench_name}"')
 
-                console.print(f'Benchmark "{bench_name}" is ready')
+                benchmark.save()
+
+        console.print(":thumbs_up: Done!")
+        console.print(
+            "Run the following command to see the detailed list of benchmarks:"
+        )
+        console.print("    kaprese benchmark list -d")
 
     elif args.subcommand == "cleanup":
         if len(args.benchmark) == 0:
@@ -181,20 +181,22 @@ def main(
         if "all" in args.benchmark:
             args.benchmark = [b.name for b in all_benchmarks()]
 
+        n_cleaned = 0
         with console.status("") as status:
             for i, bench_name in enumerate(args.benchmark):
                 status.update(
-                    f"[bold green][{i + 1} / {len(args.benchmark)}] Cleaning up benchmark {bench_name}"
+                    f"[bold green][{i + 1} / {len(args.benchmark)}][/bold green] Cleaning up benchmark {bench_name}"
                 )
 
                 benchmark = Benchmark.load(bench_name)
                 if benchmark is None:
                     logger.warning(f'Benchmark "{bench_name}" not found')
-                    console.print(f'Benchmark "{bench_name}" not found')
                     continue
 
                 benchmark.cleanup(delete_image=args.delete_image)
-                console.print(f'Benchmark "{bench_name}" is cleaned up')
+                benchmark.save()
+                n_cleaned += 1
+        console.print(f":thumbs_up: Done! {n_cleaned} benchmarks cleaned up")
 
     else:
         parser.print_help()
