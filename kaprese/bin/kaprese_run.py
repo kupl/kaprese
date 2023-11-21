@@ -292,11 +292,6 @@ def main(
 
             # Start checking
             status.check_start()
-            if not bench.ready:
-                logger.info(
-                    'Benchmark "%s" not prepared, trying to prepare it', bench.name
-                )
-                bench.prepare()
             support_check = engine.support(bench)
             status.check_done(support_check)
             if not support_check:
