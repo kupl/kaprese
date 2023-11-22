@@ -275,7 +275,7 @@ def main(
     table = _SummaryTable(title="kaprese running summary")
     layout["summary"].update(Align.center(table, vertical="middle"))
 
-    # logger.removeHandler(logger.handlers[0])
+    logger.removeHandler(logger.handlers[0])
     pannel_console = PanelConsole()
     handler = RichHandler(console=pannel_console, show_path=False)
     handler.setFormatter(logging.Formatter(fmt=FORMAT, datefmt=DATE_FORMAT))
