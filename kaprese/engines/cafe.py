@@ -12,13 +12,11 @@ def register_cafe(overwrite: bool = False) -> None:
             "BENCHMARK_IMAGE": "{benchmark.image}",
         },
         exec_commands=[
-            "set -o pipefail",
+            "export ENTRY=$(cat metadata.json | jq -r .function)",
             "export PROBLEM_NAME=$(echo {benchmark.name} | cut -d'-' -f1)",
-            "/opt/LearnML/engine/main.native -fix -solutions /opt/LearnML/benchmarks/C/${{PROBLEM_NAME}} "
-            "-submission src.ml -testcases testcases "
-            '$([-e test.ml ] && \\"-entry grading -grading test.ml\\" || echo \\"-entry ${{PROBLEM_NAME}}\\") '
-            "| tee {runner.mount_dir}/cafe.log",
+            'cafe -fix -solutions $PROBLEM_NAME -submission src.ml -testcases testcases -entry $ENTRY $([ -e test.ml ] && echo \\"-grading test.ml\\")',
             "export RETURN_CODE=$?",
+            "cp -f cafe.log fixed.ml {runner.mount_dir}/",
             "chown -R {runner.uid}:{runner.gid} {runner.mount_dir}",
             "exit $RETURN_CODE",
         ],
