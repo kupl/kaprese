@@ -1,6 +1,5 @@
 import argparse
 import sys
-from typing import List, Optional
 
 from rich.table import Table
 
@@ -10,9 +9,14 @@ from kaprese.utils.logging import logger
 
 
 def main(
-    argv: Optional[List[str]] = None, *, args: Optional[argparse.Namespace] = None
+    parser: argparse.ArgumentParser,
+    argv: list[str],
+    args: argparse.Namespace,
 ) -> None:
-    parser = argparse.ArgumentParser(prog="kaprese config")
+    parser.add_argument(
+        "-h", "--help", action="help", help="show this help message and exit"
+    )
+
     subparsers = parser.add_subparsers(dest="subcommand", metavar="<command>")
 
     show_parser = subparsers.add_parser("show", help="show configuration")
