@@ -5,7 +5,7 @@ import sys
 from rich.table import Table
 
 from kaprese.core.engine import Engine, all_engines
-from kaprese.engines.saver import register_saver
+from kaprese.engines import ENGINES
 from kaprese.utils.console import console
 
 
@@ -22,6 +22,7 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
     inspect_parser = subparsers.add_parser("inspect", help="inspect engine")
     inspect_parser.add_argument("engine", help="engine name")
 
+    preset_choices = list(ENGINES.keys())
     preset_parser = subparsers.add_parser("preset", help="preset engines")
     preset_parser.add_argument(
         "--overwrite",
@@ -29,7 +30,7 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
         help="overwrite existing engines",
     )
     preset_parser.add_argument(
-        "preset", nargs="*", choices=["saver"], help="preset engine name"
+        "preset", nargs="*", choices=preset_choices, help="preset engine name"
     )
 
     # Branching to pass type checking
@@ -64,9 +65,9 @@ def main(argv: list[str] | None = None, *, args: argparse.Namespace | None = Non
             preset_parser.print_help()
             sys.exit(1)
         for preset in args.preset:
-            if preset == "saver":
-                register_saver(overwrite=args.overwrite)
-                console.print(f'preset engine "{preset}" registered')
+            register = ENGINES[preset]
+            register(overwrite=args.overwrite)
+            console.print(f'preset engine "{preset}" registered')
 
     else:
         parser.print_help()
