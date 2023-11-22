@@ -45,8 +45,63 @@ class Runner:
             return None
         return (self._end_time or datetime.datetime.now()) - self._start_time
 
+    @property
+    def _logfile(self) -> Path:
+        return self.output_dir / "kaprese.log"
+
+    @property
+    def _runner_image_tag(self) -> str:
+        return f"{self.engine.image}:{self.benchmark.name}"
+
+    def prepare(self, *, force: bool = False) -> bool:
+        with enable_filelogging(self._logfile, mode="w"):
+            logger.info(
+                "Preparing runner(%s, %s)",
+                self.engine.name,
+                self.benchmark.name,
+            )
+            runner_image_tag = self._runner_image_tag
+            if force or not image_exists(runner_image_tag):
+                logger.info(
+                    'Trying to pull or build engine image "%s"', self.engine.image
+                )
+                if pull_image(runner_image_tag):
+                    logger.info('Pulled runner image "%s"', runner_image_tag)
+
+                else:
+                    logger.info('No prebuilt runner image "%s"', runner_image_tag)
+                    if self.engine.location is None:
+                        logger.error(
+                            'Failed to pull runner image "%s": no engine location provided',
+                            runner_image_tag,
+                        )
+                        return False
+
+                    build_args = self._process_build_args(self.engine.build_args)
+                    if build_image(
+                        runner_image_tag,
+                        self.engine.location,
+                        build_args,
+                        nocache=force,
+                    ):
+                        logger.info('Built runner image "%s"', runner_image_tag)
+                    else:
+                        logger.warning(
+                            'Failed to build runner image "%s": maybe wrong location? (current=%s)',
+                            runner_image_tag,
+                            self.engine.location,
+                        )
+                        return False
+
+            logger.info(
+                "Prepared runner(%s, %s)",
+                self.engine.name,
+                self.benchmark.name,
+            )
+            return True
+
     def run(self, *, delete_runner: bool = False) -> bool:
-        with enable_filelogging(self.output_dir / "kaprese.log"):
+        with enable_filelogging(self._logfile, mode="a"):
             self._start_time = datetime.datetime.now()
             logger.info(
                 "Starting runner(%s, %s) at %s",
@@ -56,31 +111,6 @@ class Runner:
             )
 
             runner_image_tag = f"{self.engine.image}:{self.benchmark.name}"
-            if not image_exists(runner_image_tag):
-                logger.info(
-                    'Trying to pull or build engine image "%s"', self.engine.image
-                )
-                if pull_image(runner_image_tag):
-                    logger.info('Pulled runner image "%s"', runner_image_tag)
-                else:
-                    logger.info('No prebuilt runner image "%s"', runner_image_tag)
-                    if self.engine.location is None:
-                        logger.error(
-                            'Failed to pull runner image "%s": no engine location provided',
-                            runner_image_tag,
-                        )
-
-                        return False
-                    build_args = self._process_build_args(self.engine.build_args)
-                    if build_image(runner_image_tag, self.engine.location, build_args):
-                        logger.info('Built runner image "%s"', runner_image_tag)
-                    else:
-                        logger.warning(
-                            'Failed to build runner image "%s": maybe wrong location? (current=%s)',
-                            runner_image_tag,
-                            self.engine.location,
-                        )
-                        return False
 
             logger.info(
                 'Running benchmark "%s" with engine "%s"',
