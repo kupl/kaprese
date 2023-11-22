@@ -3,6 +3,7 @@ import os
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Literal
 
 from rich.logging import RichHandler
 
@@ -25,8 +26,12 @@ logger.setLevel(_log_level)
 
 
 @contextmanager
-def enable_filelogging(path: Path | str) -> Generator[None, None, None]:
-    handler = logging.FileHandler(path, mode="w")
+def enable_filelogging(
+    path: Path | str,
+    *,
+    mode: Literal["w"] | Literal["a"] = "w",
+) -> Generator[None, None, None]:
+    handler = logging.FileHandler(path, mode=mode)
     handler.setFormatter(
         logging.Formatter(
             fmt=f"%(asctime)-10s %(levelname)-8s {FORMAT}", datefmt=DATE_FORMAT

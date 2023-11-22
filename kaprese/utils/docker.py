@@ -46,7 +46,11 @@ def delete_image(name: str) -> None:
 
 
 def build_image(
-    name: str, basedir: str, build_args: dict[str, str] | None = None
+    name: str,
+    basedir: str,
+    build_args: dict[str, str] | None = None,
+    *,
+    nocache: bool = False,
 ) -> bool:
     logger.debug('Building image "%s"', name)
     logger.debug("  path: %s", basedir)
@@ -60,6 +64,7 @@ def build_image(
             path=basedir,
             tag=name,
             buildargs=build_args,
+            nocache=nocache,
             rm=True,
             forcerm=True,
         )
