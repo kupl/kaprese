@@ -54,7 +54,7 @@ class _RunnerStatus:
     def __rich_console__(
         self, console: Console, options: ConsoleOptions
     ) -> RenderResult:
-        if self._status == "Pending":
+        if self._status == "Pending" or self._status == "Not supported":
             yield Text(self._status, style="grey23")
         elif self._status == "Running" or self._status == "Checking":
             yield self._spinner.render(
@@ -62,7 +62,7 @@ class _RunnerStatus:
             ) if self._spinner is not None else f"{self._status}..."
         elif self._status == "OK":
             yield Text(self._status, style="green")
-        elif self._status == "Failed" or self._status == "Not supported":
+        elif self._status == "Failed":
             yield Text(self._status, style="red")
 
     def __rich_measure__(
