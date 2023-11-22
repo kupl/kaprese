@@ -7,7 +7,7 @@ def register_cafe(overwrite: bool = False) -> None:
         supported_languages=["ocaml"],
         supported_os=["debian:12"],
         image="ghcr.io/kupl/kaprese-engines/cafe",
-        location="https://github.com/kupl/kaprese-engines.git#cafe:context/cafe/starlab-benchmarks",
+        location="https://github.com/kupl/kaprese-engines.git#main:context/cafe/starlab-benchmarks",
         build_args={
             "BENCHMARK_IMAGE": "{benchmark.image}",
         },
