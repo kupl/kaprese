@@ -25,14 +25,22 @@ def main(argv: Optional[List[str]] = None) -> None:
     )
 
     subparsers = parser.add_subparsers(dest="subcommand", metavar="<command>")
-    subparsers.add_parser("config", add_help=False, help="configure kaprese")
+    config_parser = subparsers.add_parser(
+        "config",
+        add_help=False,
+        help="configure kaprese",
+    )
     benchmark_parser = subparsers.add_parser(
         "benchmark",
         add_help=False,
         help="benchmark related commands",
     )
     subparsers.add_parser("benchmarks", add_help=False, help="list benchmarks")
-    subparsers.add_parser("engine", add_help=False, help="engine related commands")
+    engine_parser = subparsers.add_parser(
+        "engine",
+        add_help=False,
+        help="engine related commands",
+    )
     subparsers.add_parser("engines", add_help=False, help="list engines")
     run_parser = subparsers.add_parser(
         "run",
@@ -48,7 +56,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     if args.subcommand == "config":
         from kaprese.bin.kaprese_config import main
 
-        main(remainder, args=args)
+        main(config_parser, remainder, args=args)
 
     elif args.subcommand == "benchmark":
         from kaprese.bin.kaprese_benchmark import main
@@ -63,12 +71,12 @@ def main(argv: Optional[List[str]] = None) -> None:
     elif args.subcommand == "engine":
         from kaprese.bin.kaprese_engine import main
 
-        main(remainder, args=args)
+        main(engine_parser, remainder, args=args)
 
     elif args.subcommand == "engines":
         from kaprese.bin.kaprese_engine import main
 
-        main(["list"] + remainder, args=args)
+        main(engine_parser, ["list"] + remainder, args=args)
 
     elif args.subcommand == "run":
         from kaprese.bin.kaprese_run import main
