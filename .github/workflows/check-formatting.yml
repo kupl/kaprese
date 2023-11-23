@@ -1,0 +1,39 @@
+name: Check formatting
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Check formatting
+    runs-on: ubuntu-latest
+
+    permissions:
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: pip install ".[dev]"
+
+      - name: Check formatting with black
+        run: black --check ./kaprese
+
+      - name: Report on comment if failed to check formatting
+        uses: actions/github-script@v6
+        if: ${{ github.event_name == 'pull_request' && failure() }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: ':x: Failed to check formatting. Please run `black ./kaprese` locally and push the changes.',
+            })
