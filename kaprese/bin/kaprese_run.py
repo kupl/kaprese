@@ -351,6 +351,12 @@ def main(
 
             # Start checking
             row.check_start()
+            if not bench.availability:
+                logger.info(
+                    'Benchmark "%s" is not available, try to prepare it', bench.name
+                )
+                bench.prepare()
+                bench.save()
             support_check = engine.support(bench)
             row.check_done(support_check)
             if not support_check:
