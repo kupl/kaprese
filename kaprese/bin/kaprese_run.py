@@ -351,6 +351,8 @@ def main(
 
             # Start checking
             row.check_start()
+            if not bench.availability:
+                    bench.prepare()
             support_check = engine.support(bench)
             row.check_done(support_check)
             if not support_check:
