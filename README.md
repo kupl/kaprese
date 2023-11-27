@@ -45,10 +45,10 @@ The following table shows the list of supported benchmarks and engines.
 | `ocaml`    | OCaml benchmarks in [kupl/starlab-benchmarks](https://github.com/kupl/starlab-benchmarks) |
 
 ### Engines
-| Engines | Repository                                               |
-| :------ | :------------------------------------------------------- |
-| `saver` | [kupl/SAVER_pubic](https://github.com/kupl/Saver_public) |
-| `cafe`  | [kupl/LearnML](https://github.com/kupl/LearnML)          |
+| Engines | Repository                                                |
+| :------ | :-------------------------------------------------------- |
+| `saver` | [kupl/SAVER_public](https://github.com/kupl/Saver_public) |
+| `cafe`  | [kupl/LearnML](https://github.com/kupl/LearnML)           |
 
 ## How to Add Your Own
 
