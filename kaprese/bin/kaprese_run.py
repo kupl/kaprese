@@ -301,8 +301,15 @@ def main(
         help='benchmark to run (see "kaprese benchmark list")',
     )
 
+    parser.add_argument(
+        "extra_args",
+        nargs="*",
+        help="extra arguments for engine (e.g. -- -j4)",
+    )
+
     # Branching to pass type checking
     args = parser.parse_args(argv, namespace=args) if args else parser.parse_args(argv)
+    print(args)
 
     engines: list[Engine] = []
     for engine_name in args.engine:
@@ -369,7 +376,7 @@ def main(
 
             # Start preparing
             row.prepare_start()
-            runner = Runner(bench, engine, args.output)
+            runner = Runner(bench, engine, args.output, args.extra_args)
             prepared = runner.prepare(force=args.rebuild_runner)
             row.prepare_done(prepared)
             if not prepared:

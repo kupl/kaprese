@@ -16,10 +16,17 @@ from kaprese.utils.logging import enable_filelogging, logger
 
 class Runner:
     def __init__(
-        self, benchmark: Benchmark, engine: Engine, output_dir: str | None = None
+        self,
+        benchmark: Benchmark,
+        engine: Engine,
+        output_dir: str | None = None,
+        extra_args: str | list[str] = "",
     ):
         self.benchmark = benchmark
         self.engine = engine
+        self.extra_args = (
+            extra_args if isinstance(extra_args, str) else " ".join(extra_args)
+        )
 
         self.output_dir = Path(
             f"{output_dir or 'kaprese-out'}/{engine.name}/{benchmark.name}"
