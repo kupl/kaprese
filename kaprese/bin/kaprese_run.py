@@ -309,7 +309,6 @@ def main(
 
     # Branching to pass type checking
     args = parser.parse_args(argv, namespace=args) if args else parser.parse_args(argv)
-    print(args)
 
     engines: list[Engine] = []
     for engine_name in args.engine:
