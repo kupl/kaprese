@@ -14,7 +14,7 @@ def register_saver(overwrite: bool = False) -> None:
         exec_commands=[
             "make clean -j$(nproc) >/dev/null",
             "infer capture -- make -j$(nproc) >/dev/null",
-            'infer saver --error-report report.json $([ -e api.json ] && echo \\"--resource-api-spec api.json\\")',
+            'infer saver --error-report report.json $([ -e api.json ] && echo \\"--resource-api-spec api.json\\") {runner.extra_args}',
             "export RETURN_CODE=$?",
             "cp -r infer-out/* {runner.mount_dir}/",
             "chown -R {runner.uid}:{runner.gid} {runner.mount_dir}",
