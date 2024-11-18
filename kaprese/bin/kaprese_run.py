@@ -16,7 +16,7 @@ from rich.spinner import Spinner
 from rich.table import Table
 from rich.text import Text
 
-from kaprese.core.benchmark import Benchmark
+from kaprese.core.benchmark import Benchmark, all_benchmarks
 from kaprese.core.engine import Engine
 from kaprese.core.runner import Runner
 from kaprese.utils.console import PanelConsole, console
@@ -321,6 +321,12 @@ def main(
             continue
         engines.append(engine)
     benchmarks: list[Benchmark] = []
+
+    # Load benchmarks
+    # If no benchmark is specified, run all benchmarks
+    if len(args.benchmark) == 0:
+        benchmarks = all_benchmarks()
+
     for bench_name in args.benchmark:
         bench = Benchmark.load(bench_name)
         if bench is None:
