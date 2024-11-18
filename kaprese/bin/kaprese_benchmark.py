@@ -44,6 +44,13 @@ def main(
         help="preset benchmarks to add",
     )
 
+    preset_parser.add_argument(
+        "delete",
+        nargs="*",
+        choices=["all", "ocaml", "c"],
+        help="preset benchmarks to delete",
+    )
+
     prepare_parser = subparsers.add_parser("prepare", help="prepare benchmarks")
     prepare_parser.add_argument(
         "-f", "--force", action="store_true", help="force prepare benchmarks"
@@ -128,6 +135,19 @@ def main(
 
         for register in registers:
             register(args.overwrite)
+
+    elif args.subcommand == "delete":
+        if len(args.delete) == 0:
+            preset_parser.print_help()
+            sys.exit(1)
+        registers: list[Callable[[bool], None]] = []
+        if "ocaml" in args.delete or "all" in args.delete:
+            registers.append(register_ocaml_benchmarks)
+        if "c" in args.delete or "all" in args.delete:
+            registers.append(register_c_benchmarks)
+
+        for register in registers:
+            register(delete_image=False)
 
     elif args.subcommand == "prepare":
         if len(args.benchmark) == 0:
