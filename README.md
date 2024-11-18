@@ -33,6 +33,17 @@ kaprese run -b flint-1 spearmint-1 -e saver
 # LOG_LEVEL=info kaprese run -b flint-1 spearmint-1 -e saver
 ```
 
+## Options
+
+`kaprese` provides the following options:
+
+| Benchmarks | Repository                                                                                |
+| :--------- | :---------------------------------------------------------------------------------------- |
+| `benchmark`        | command to do something about benchmark     |
+| `engine`    | command to do something about engine |
+| `run`    | command to run APR tools on benchmarks |
+| `-h`, `--help`    | command to show help |
+
 ## Benchmarks and Engines
 `kaprese` provides a set of benchmarks and engines.
 You can register them by calling `kaprese benchmark preset <language>` and `kaprese engine preset <engine>`.
