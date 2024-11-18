@@ -37,6 +37,7 @@ def register_benchmarks(overwrite: bool = False) -> None:
         logger.info(f"Registering ocaml benchmark {bench.name}")
         bench.register(overwrite=overwrite)
 
+
 def unregister_benchmarks(delete_image: bool = False) -> None:
     formulas = [
         Benchmark(
