@@ -74,9 +74,11 @@ class _RunnerStatus:
             or self._status == "Checking"
             or self._status == "Preparing"
         ):
-            yield self._spinner.render(
-                console.get_time()
-            ) if self._spinner is not None else f"{self._status}..."
+            yield (
+                self._spinner.render(console.get_time())
+                if self._spinner is not None
+                else f"{self._status}..."
+            )
         elif self._status == "OK":
             yield Text(self._status, style="green")
         else:
