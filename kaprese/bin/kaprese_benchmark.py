@@ -101,13 +101,17 @@ def main(
                         benchmark.name,
                         benchmark.image,
                         "yes" if benchmark.availability else "[grey23]no[/grey23]",
-                        language
-                        if (language := benchmark.language)
-                        else "[grey23]n/a[/grey23]",
+                        (
+                            language
+                            if (language := benchmark.language)
+                            else "[grey23]n/a[/grey23]"
+                        ),
                         os if (os := benchmark.os) else "[grey23]n/a[/grey23]",
-                        workdir
-                        if (workdir := benchmark.workdir)
-                        else "[grey23]n/a[/grey23]",
+                        (
+                            workdir
+                            if (workdir := benchmark.workdir)
+                            else "[grey23]n/a[/grey23]"
+                        ),
                     )
                     benchmark.save()
             console.print(table)
