@@ -48,6 +48,13 @@ def main(argv: Optional[List[str]] = None) -> None:
         help="run engines on benchmarks",
     )
 
+    subparsers.add_parser("evals", add_help=False, help="eval engines")
+    eval_parser = subparsers.add_parser(
+        "eval",
+        add_help=False,
+        help="eval engines",
+    )
+
     args, remainder = parser.parse_known_args(argv)
 
     if args.kaprese_config:
@@ -82,6 +89,11 @@ def main(argv: Optional[List[str]] = None) -> None:
         from kaprese.bin.kaprese_run import main
 
         main(run_parser, remainder, args)
+
+    elif args.subcommand == "eval":
+        from kaprese.bin.kaprese_eval import main
+
+        main(eval_parser, remainder, args)
 
     else:
         parser.print_help()
