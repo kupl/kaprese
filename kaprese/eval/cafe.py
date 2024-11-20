@@ -1,13 +1,12 @@
-from kaprese.utils.const import OUTPUT_DIRECTORY
 from kaprese.core.eval import Eval
 
 from pathlib import Path
 
 
-def eval_cafe() -> Eval:
+def eval_cafe(output_directory) -> Eval:
     eval = Eval("cafe")
 
-    tool_dir = Path.cwd() / OUTPUT_DIRECTORY / "cafe"
+    tool_dir = Path.cwd() / output_directory / "cafe"
 
     for benchmark_dir in tool_dir.iterdir():
         if benchmark_dir.is_dir():
