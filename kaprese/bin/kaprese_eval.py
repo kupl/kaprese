@@ -30,12 +30,12 @@ def main(
         help='engine to eval (see "kaprese engine list")',
     )
 
-    parser.add_argument( 
-        "-o", 
-        "--output", 
-        default="kaprese-out", 
-        help="output directory (default=%(default)s)", 
-    ) 
+    parser.add_argument(
+        "-o",
+        "--output",
+        default="kaprese-out",
+        help="output directory (default=%(default)s)",
+    )
 
     # Branching to pass type checking
     args = parser.parse_args(argv, namespace=args) if args else parser.parse_args(argv)
