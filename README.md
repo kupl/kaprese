@@ -42,6 +42,7 @@ kaprese run -b flint-1 spearmint-1 -e saver
 | `benchmark`        | command to do something about benchmark     |
 | `engine`    | command to do something about engine |
 | `run`    | command to run APR tools on benchmarks |
+| `eval` | command to evaluate the results | 
 | `-h`, `--help`    | command to show help |
 
 ## Benchmarks and Engines
