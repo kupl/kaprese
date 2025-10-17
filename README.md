@@ -29,7 +29,7 @@ You can run `saver` engine on `flint-1` benchmark as follows:
 kaprese benchmark preset c
 kaprese engine preset saver
 kaprese run -b flint-1 spearmint-1 -e saver
-# See the logs. If you want to see more logs set LOV_LEVEL environment variable to INFO, e.g.,
+# See the logs. If you want to see more logs set LOG_LEVEL environment variable to INFO, e.g.,
 # LOG_LEVEL=info kaprese run -b flint-1 spearmint-1 -e saver
 ```
 
