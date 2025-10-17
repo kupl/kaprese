@@ -12,11 +12,9 @@ class _DOCKER_CONFIG_TYPE(TypedDict):
     DOCKER_SOCK_PATH: Optional[str]
 
 
-def _config_path_guard[
-    T, **P
-](func: Callable[Concatenate[_Configure, P], T]) -> Callable[
-    Concatenate[_Configure, P], T
-]:
+def _config_path_guard[T, **P](
+    func: Callable[Concatenate[_Configure, P], T],
+) -> Callable[Concatenate[_Configure, P], T]:
     def wrapper(self: _Configure, *args: P.args, **kwargs: P.kwargs) -> T:
         if not self.CONFIG_PATH.exists():
             logger.info(f"Creating config directory: {self.CONFIG_PATH}")
