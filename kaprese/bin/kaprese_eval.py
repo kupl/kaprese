@@ -1,10 +1,8 @@
 import argparse
-import json
 import sys
 
 from rich.table import Table
 
-from kaprese.core.engine import Engine, all_engines
 from kaprese.eval import ENGINES
 from kaprese.utils.console import console
 
