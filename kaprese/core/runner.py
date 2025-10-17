@@ -37,8 +37,7 @@ class Runner:
 
         if self.output_dir.exists():
             logger.warning(
-                'Output directory "%s" already exists, '
-                "the results may be overwritten",
+                'Output directory "%s" already exists, the results may be overwritten',
                 self.output_dir,
             )
         self.output_dir.mkdir(parents=True, exist_ok=True)

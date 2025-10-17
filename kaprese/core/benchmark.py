@@ -64,7 +64,7 @@ class Benchmark:
                     key.strip('"'): value.strip('"')
                     for key, value in [line.split("=") for line in out.split("\n")]
                 }
-                out = f'{data["ID"]}:{data["VERSION_ID"]}'
+                out = f"{data['ID']}:{data['VERSION_ID']}"
             self._os = out
         return self._os
 
