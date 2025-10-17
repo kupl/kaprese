@@ -2,17 +2,20 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Callable, Concatenate, Optional, TypedDict, Union
+from typing import Callable, Concatenate, Optional, ParamSpec, TypedDict, TypeVar, Union
 
 from kaprese.utils.design import Singleton
 from kaprese.utils.logging import logger
+
+T = TypeVar("T")
+P = ParamSpec("P")
 
 
 class _DOCKER_CONFIG_TYPE(TypedDict):
     DOCKER_SOCK_PATH: Optional[str]
 
 
-def _config_path_guard[T, **P](
+def _config_path_guard(
     func: Callable[Concatenate[_Configure, P], T],
 ) -> Callable[Concatenate[_Configure, P], T]:
     def wrapper(self: _Configure, *args: P.args, **kwargs: P.kwargs) -> T:
