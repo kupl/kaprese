@@ -22,7 +22,7 @@ class Benchmark:
     workdir_command: str | None = dataclasses.field(default=None, repr=False)
 
     # Internal fields, you may set them manually rather than providing commands
-    _availablility: bool = dataclasses.field(default=False, repr=False, init=False)
+    _availability: bool = dataclasses.field(default=False, repr=False, init=False)
     _language: str | None = None
     _os: str | None = dataclasses.field(default=None, repr=False)
     _workdir: str | None = dataclasses.field(default=None, repr=False)
@@ -33,8 +33,8 @@ class Benchmark:
         if not availability:
             self.cleanup()
             self.register(overwrite=True)
-        self._availablility = availability
-        return self._availablility
+        self._availability = availability
+        return self._availability
 
     @property
     def language(self) -> str | None:
@@ -88,7 +88,7 @@ class Benchmark:
             self._workdir = None
         if delete_image and self.availability:
             docker_delete_image(self.image)
-        self._availablility = False
+        self._availability = False
         self._os = None
 
     @property
@@ -130,7 +130,7 @@ class Benchmark:
             logger.error(f'Benchmark "{self.name}" does not exist')
             return
         benchmark = dataclasses.asdict(self)
-        del benchmark["_availablility"]
+        del benchmark["_availability"]
         benchmark_json.write_text(json.dumps(benchmark))
 
 
