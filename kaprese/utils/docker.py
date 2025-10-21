@@ -4,10 +4,12 @@ from pathlib import Path
 from typing import Any, cast
 
 from docker.client import DockerClient  # type: ignore
-from docker.errors import APIError  # type: ignore
-from docker.errors import BuildError  # type: ignore
-from docker.errors import ContainerError  # type: ignore
-from docker.errors import ImageNotFound  # type: ignore
+from docker.errors import (  # type: ignore
+    APIError,
+    BuildError,
+    ContainerError,
+    ImageNotFound,
+)
 from docker.models.containers import Container  # type: ignore
 
 from kaprese.core.config import CONFIGURE

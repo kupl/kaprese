@@ -1,6 +1,6 @@
-from kaprese.core.eval import Eval
-
 from pathlib import Path
+
+from kaprese.core.eval import Eval
 
 
 def eval_cafe(output_directory) -> Eval:
