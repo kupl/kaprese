@@ -9,7 +9,7 @@ authors = [
 ]
 description = "Project parser for Python"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.12"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
