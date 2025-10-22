@@ -16,8 +16,6 @@ def main(
         "-h", "--help", action="help", help="show this help message and exit"
     )
 
-    # subparsers = parser.add_subparsers(dest="subcommand", metavar="<command>")
-
     eval_choices = list(ENGINES.keys())
 
     parser.add_argument(
