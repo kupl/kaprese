@@ -15,10 +15,12 @@ You can run `kaprese` by following the steps below.
 
 ### Installation
 
-`kaprese` can be installed via `pip`:
+Clone the repository and install `kaprese` in editable mode from the project root directory:
 
 ```bash
-pip install kaprese
+git clone https://github.com/kupl/kaprese.git
+cd kaprese
+pip install -e .
 ```
 
 ### Usage
