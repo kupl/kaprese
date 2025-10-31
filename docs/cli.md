@@ -278,7 +278,7 @@ Inspect detailed information about a specific engine.
 | Option | Description | Default |
 |--------|-------------|---------|
 | `-h`, `--help` | Show help message and exit | - |
-| `<engine>` | Engine name to inspect | - |
+| `<engine>` | Engine name to inspect | Required |
 
 **Example:**
 
@@ -387,6 +387,7 @@ kaprese run -b flint-1 -e saver --delete-runner
 
 **Notes:**
 
+- At least one engine must be specified with `-e` for the command to run.
 - If no benchmarks are specified with `-b`, all registered benchmarks will be used.
 - The command checks if engines support the benchmark's language and OS before running.
 - Progress is shown in a live table format with status updates.
@@ -429,6 +430,7 @@ kaprese eval -e cafe -o /path/to/output
 
 **Notes:**
 
+- At least one engine must be specified with `-e` for the command to run.
 - The `eval` command analyzes the output from previous `run` commands.
 - Currently, only the `cafe` engine has evaluation support.
 - The command reads from the output directory specified by `-o` (default: `kaprese-out`).
