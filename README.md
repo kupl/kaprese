@@ -1,5 +1,7 @@
 # kaprese
 
+[![PyPI version](https://badge.fury.io/py/kaprese.svg)](https://pypi.org/project/kaprese/)
+
 Collection of APR tools by SAL (Software Analysis Lab) at Korea University.
 
 ## Quick Start
