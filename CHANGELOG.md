@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLI interface for running APR tools
 
 ### Changed
-- Prepared for temporal next version
+- Prepared for temporary next version
 
 [Unreleased]: https://github.com/kupl/kaprese/compare/v1.1.0...HEAD
 [1.1.0]: https://github.com/kupl/kaprese/releases/tag/v1.1.0
