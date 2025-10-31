@@ -147,7 +147,7 @@ Add or manage preset benchmarks for specific languages.
 |--------|-------------|---------|
 | `-h`, `--help` | Show help message and exit | - |
 | `--overwrite` | Overwrite existing benchmarks | `False` |
-| `{all,ocaml,c}` | Preset benchmarks to add | - |
+| `<preset>` | Preset language to add (choices: all, ocaml, c) | Required |
 
 **Example:**
 
@@ -175,7 +175,7 @@ Prepare benchmarks by pulling their Docker images.
 |--------|-------------|---------|
 | `-h`, `--help` | Show help message and exit | - |
 | `-f`, `--force` | Force prepare benchmarks (re-download) | `False` |
-| `<benchmark>` | Benchmark name(s) to prepare | - |
+| `<benchmark>` | Benchmark name(s) to prepare (use 'all' for all benchmarks) | Required |
 
 **Example:**
 
@@ -208,7 +208,7 @@ Clean up benchmark images and cached data.
 |--------|-------------|---------|
 | `-h`, `--help` | Show help message and exit | - |
 | `-d`, `--delete-image` | Delete Docker images from registry | `False` |
-| `<benchmark>` | Benchmark name(s) to clean up | - |
+| `<benchmark>` | Benchmark name(s) to clean up (use 'all' for all benchmarks) | Required |
 
 **Example:**
 
@@ -310,7 +310,7 @@ Register preset engines.
 |--------|-------------|---------|
 | `-h`, `--help` | Show help message and exit | - |
 | `--overwrite` | Overwrite existing engines | `False` |
-| `{saver,cafe}` | Preset engine name(s) to add | - |
+| `<preset>` | Preset engine name to add (choices: saver, cafe) | Required |
 
 **Example:**
 
@@ -345,8 +345,8 @@ Run APR engines on benchmarks. This is the main command for executing automatic 
 | `--delete-runner` | Delete runner Docker image after running | `False` |
 | `--rebuild-runner` | Rebuild runner Docker image | `False` |
 | `-o OUTPUT`, `--output OUTPUT` | Output directory for results | `kaprese-out` |
-| `-e [ENGINE ...]`, `--engine [ENGINE ...]` | Engine(s) to run (see `kaprese engine list`) | - |
-| `-b [BENCHMARK ...]`, `--benchmark [BENCHMARK ...]` | Benchmark(s) to run (see `kaprese benchmark list`) | All benchmarks |
+| `-e [ENGINE ...]`, `--engine [ENGINE ...]` | Engine(s) to run (see `kaprese engine list`) | Required |
+| `-b [BENCHMARK ...]`, `--benchmark [BENCHMARK ...]` | Benchmark(s) to run (see `kaprese benchmark list`) | All registered benchmarks |
 | `extra_args` | Extra arguments to pass to the engine (use `--` separator) | - |
 
 **Example:**
@@ -404,7 +404,7 @@ Evaluate results from APR engine runs.
 | Option | Description | Default |
 |--------|-------------|---------|
 | `-h`, `--help` | Show help message and exit | - |
-| `-e [{cafe} ...]`, `--engine [{cafe} ...]` | Engine(s) to evaluate | - |
+| `-e [ENGINE ...]`, `--engine [ENGINE ...]` | Engine(s) to evaluate (choices: cafe) | Required |
 | `-o OUTPUT`, `--output OUTPUT` | Output directory to read results from | `kaprese-out` |
 
 **Example:**
