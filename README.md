@@ -33,17 +33,19 @@ kaprese run -b flint-1 spearmint-1 -e saver
 # LOG_LEVEL=info kaprese run -b flint-1 spearmint-1 -e saver
 ```
 
-## Options
+## Commands
 
-`kaprese` provides the following options:
+`kaprese` provides the following commands:
 
-| Benchmarks | Repository                                                                                |
+| Command | Description |
 | :--------- | :---------------------------------------------------------------------------------------- |
 | `benchmark`        | command to do something about benchmark     |
 | `engine`    | command to do something about engine |
 | `run`    | command to run APR tools on benchmarks |
 | `eval` | command to evaluate the results |
 | `-h`, `--help`    | command to show help |
+
+For detailed command-line options, argument descriptions, default values, and usage examples, see the [**CLI Reference**](docs/cli.md).
 
 ## Benchmarks and Engines
 
