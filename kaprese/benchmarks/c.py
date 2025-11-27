@@ -30,7 +30,7 @@ def register_benchmarks(overwrite: bool = False) -> None:
             language_command="export DEBIAN_FRONTEND=non-interactive && apt-get update >/dev/null 2>&1 && apt-get install -y --no-install-recommends jq >/dev/null 2>&1 && cat metadata.json | jq -r .language",
             workdir_command="export DEBIAN_FRONTEND=non-interactive && apt-get update >/dev/null 2>&1 && apt-get install -y --no-install-recommends jq >/dev/null 2>&1 && cd $(cat metadata.json | jq -r .buggyPath) && pwd",
         )
-        for i in range(1, 2)
+        for i in [1, 2, 38]
     ]
 
     for bench in [*flexs, *flints, *spearmints]:

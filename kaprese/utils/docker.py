@@ -58,6 +58,7 @@ def build_image(
     logger.debug("  path: %s", basedir)
     logger.debug("  tag: %s", name)
     logger.debug("  buildargs: %s", build_args)
+
     client = get_docker_client()
     if build_args is None:
         build_args = {}
@@ -138,6 +139,7 @@ def run_command_stream(
     logger.debug("  command: %s", command)
     logger.debug("  workdir: %s", workdir)
     logger.debug("  mount: %s", mount)
+
     client = get_docker_client()
 
     result = DockerStreamResult()

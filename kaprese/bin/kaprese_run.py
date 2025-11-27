@@ -4,6 +4,7 @@ from datetime import datetime
 from itertools import product
 from time import sleep
 from typing import Literal, Union
+import json
 
 from rich.align import Align
 from rich.console import Console, ConsoleOptions, RenderResult
@@ -15,6 +16,7 @@ from rich.panel import Panel
 from rich.spinner import Spinner
 from rich.table import Table
 from rich.text import Text
+from rich.syntax import Syntax
 
 from kaprese.core.benchmark import Benchmark, all_benchmarks
 from kaprese.core.engine import Engine
@@ -348,6 +350,18 @@ def main(
         Layout(name="log", ratio=1),
     )
 
+    layout["log"].split(
+        Layout(name="bug", ratio=1),  # 높이를 고정하고 싶으면 size 사용
+        Layout(name="code", ratio=1),  # 가운데 영역
+        Layout(name="logs", ratio=2),  # 아래 영역
+    )
+
+    # 가운데 code 영역을 좌/우로 2분할: original / patch
+    layout["code"].split_row(
+        Layout(name="original", ratio=1),
+        Layout(name="patch", ratio=1),
+    )
+
     table = _SummaryTable(title="kaprese running summary")
     layout["summary"].update(Align.center(table, vertical="middle"))
 
@@ -356,7 +370,12 @@ def main(
     handler = RichHandler(console=pannel_console, show_path=False)
     handler.setFormatter(logging.Formatter(fmt=FORMAT, datefmt=DATE_FORMAT))
     logger.addHandler(handler)
-    layout["log"].update(Panel(pannel_console, title="logs"))
+
+    layout["bug"].update(Panel("", title="bug info"))
+    layout["original"].update(Panel("", title="original code"))
+    layout["patch"].update(Panel("", title="patch diff"))
+
+    layout["logs"].update(Panel(pannel_console, title="logs"))
 
     with Live(layout, console=console, screen=True, refresh_per_second=12.5):
         for engine, bench in product(engines, benchmarks):
@@ -384,6 +403,36 @@ def main(
             # Start preparing
             row.prepare_start()
             runner = Runner(bench, engine, args.output, args.extra_args)
+
+            logger.debug("OUTPUT::: %s", runner.output_dir)
+
+            # TODO:
+            # DANGER: THIS IS FOR ONLY SPEARMINT!!! HAVE TO MODIFY CODE LATER!!!
+
+            bug_info, snippet, start_line = runner.get_bug_info()
+
+            pretty_bug_info = json.dumps(bug_info["leak"], indent=2)
+            syntax = Syntax(
+                pretty_bug_info,
+                "json",
+                theme="monokai",
+                # line_numbers=True,
+            )
+
+            layout["bug"].update(Panel(syntax, title="bug info"))
+
+            pretty_snippet = Syntax(
+                snippet,
+                "c",
+                theme="monokai",
+                line_numbers=True,
+                start_line=start_line + 1,
+            )
+
+            layout["original"].update(Panel(pretty_snippet, title="original code"))
+
+            # TODO END
+
             prepared = runner.prepare(force=args.rebuild_runner)
             row.prepare_done(prepared)
             if not prepared:
@@ -395,6 +444,24 @@ def main(
 
             # Actual run
             result = runner.run(delete_runner=args.delete_runner)
+
+            # TODO:
+            # DANGER: THIS IS FOR ONLY SPEARMINT!!! HAVE TO MODIFY CODE LATER!!!
+
+            with open(runner.output_dir / "saver" / "_opusfile.c.patch.json") as f:
+                report = json.load(f)
+                diff = report["diff"]
+
+            pretty_diff = Syntax(
+                diff,
+                "diff",
+                theme="monokai",
+                # line_numbers=True,
+            )
+
+            layout["patch"].update(Panel(pretty_diff, title="patch diff"))
+
+            # TODO END
 
             # Finish running
             row.run_done(result)

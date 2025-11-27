@@ -59,6 +59,73 @@ class Runner:
     def _runner_image_tag(self) -> str:
         return f"{self.engine.image}:{self.benchmark.name}"
 
+    def get_bug_info(self, force=False):
+        runner_image_tag = self._runner_image_tag
+        if force or not image_exists(runner_image_tag):
+            logger.info('Trying to pull or build engine image "%s"', self.engine.image)
+            if pull_image(runner_image_tag):
+                logger.info('Pulled runner image "%s"', runner_image_tag)
+
+            else:
+                logger.info('No prebuilt runner image "%s"', runner_image_tag)
+                if self.engine.location is None:
+                    logger.error(
+                        'Failed to pull runner image "%s": no engine location provided',
+                        runner_image_tag,
+                    )
+                    return False
+
+                build_args = self._process_build_args(self.engine.build_args)
+                if build_image(
+                    runner_image_tag,
+                    self.engine.location,
+                    build_args,
+                    nocache=force,
+                ):
+                    logger.info('Built runner image "%s"', runner_image_tag)
+                else:
+                    logger.warning(
+                        'Failed to build runner image "%s": maybe wrong location? (current=%s)',
+                        runner_image_tag,
+                        self.engine.location,
+                    )
+                    return False
+
+        with run_commands_stream(
+            runner_image_tag,
+            [f"cat {self.benchmark.workdir}/../metadata.json"],
+            workdir=self.benchmark.workdir,
+            mount={self.output_dir: self.mount_dir},
+        ) as result:
+            if result.stream is not None:
+                import json
+
+                total_output = "\n".join(
+                    [line.decode().strip("\n") for line in result.stream]
+                )
+
+                bug_info = json.loads(total_output)
+                src_file_path = bug_info["leak"]["sink"]["file"]
+                src_file_line = bug_info["leak"]["sink"]["line"]
+
+        with run_commands_stream(
+            runner_image_tag,
+            [f"cat {self.benchmark.workdir}/{src_file_path}"],
+            workdir=self.benchmark.workdir,
+            mount={self.output_dir: self.mount_dir},
+        ) as result:
+            if result.stream is not None:
+                source_code = "\n".join(
+                    [line.decode().strip("\n") for line in result.stream]
+                )
+
+                # get 5 lines before and after the leak line
+                source_code_lines = source_code.split("\n")
+                start_line = max(0, src_file_line - 6)
+                end_line = min(len(source_code_lines), src_file_line + 20)
+                snippet = "\n".join(source_code_lines[start_line:end_line])
+        return (bug_info, snippet, start_line)
+
     def prepare(self, *, force: bool = False) -> bool:
         with enable_filelogging(self._logfile, mode="w"):
             logger.info(
