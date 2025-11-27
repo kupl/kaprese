@@ -404,8 +404,6 @@ def main(
             row.prepare_start()
             runner = Runner(bench, engine, args.output, args.extra_args)
 
-            logger.debug("OUTPUT::: %s", runner.output_dir)
-
             # TODO:
             # DANGER: THIS IS FOR ONLY SPEARMINT!!! HAVE TO MODIFY CODE LATER!!!
 
@@ -416,6 +414,7 @@ def main(
                 pretty_bug_info,
                 "json",
                 theme="monokai",
+                background_color="default",
                 # line_numbers=True,
             )
 
@@ -426,6 +425,7 @@ def main(
                 "c",
                 theme="monokai",
                 line_numbers=True,
+                background_color="default",
                 start_line=start_line + 1,
             )
 
@@ -456,6 +456,7 @@ def main(
                 diff,
                 "diff",
                 theme="monokai",
+                background_color="default",
                 # line_numbers=True,
             )
 
