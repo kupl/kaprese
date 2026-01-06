@@ -55,8 +55,8 @@ The following table shows the list of supported benchmarks and engines.
 
 | Benchmarks | Repository                                                                                |
 | :--------- | :---------------------------------------------------------------------------------------- |
-| `c`        | C benchmarks in [kupl/starlab-benchmarks](https://github.com/kupl/starlab-benchmarks)     |
-| `ocaml`    | OCaml benchmarks in [kupl/starlab-benchmarks](https://github.com/kupl/starlab-benchmarks) |
+| `c`        | C benchmarks in [kupl/starlab-benchmarks](https://github.com/kupl/starlab-benchmarks/tree/main/C)     |
+| `ocaml`    | OCaml benchmarks in [kupl/starlab-benchmarks](https://github.com/kupl/starlab-benchmarks/tree/main/OCaml) |
 
 ### Engines
 
