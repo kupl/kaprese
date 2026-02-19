@@ -1,8 +1,8 @@
-from typing import Any, Dict
+from typing import Any
 
 
 class Singleton(type):
-    __instances: Dict[type, Any] = {}
+    __instances: dict[type, Any] = {}
 
     def __call__(cls, *args: Any, **kwargs: Any) -> Any:
         if cls not in cls.__instances:
