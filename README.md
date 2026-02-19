@@ -55,8 +55,8 @@ The following table shows the list of supported benchmarks and engines.
 
 | Benchmarks | Repository                                                                                |
 | :--------- | :---------------------------------------------------------------------------------------- |
-| `c`        | C benchmarks in [kupl/starlab-benchmarks](https://github.com/kupl/starlab-benchmarks)     |
-| `ocaml`    | OCaml benchmarks in [kupl/starlab-benchmarks](https://github.com/kupl/starlab-benchmarks) |
+| `c`        | C benchmarks in [kupl/starlab-benchmarks](https://github.com/kupl/starlab-benchmarks/tree/main/C)     |
+| `ocaml`    | OCaml benchmarks in [kupl/starlab-benchmarks](https://github.com/kupl/starlab-benchmarks/tree/main/OCaml) |
 
 ### Engines
 
@@ -110,7 +110,7 @@ You can initialize an engine with the following 6 parameters:
 - `build_args`: arguments to pass to `docker build` command to fill `ARG` variables in the Dockerfile, e.g., `{"SOME_ARG": "some_value"}`.
 - `exec_commands`: list of commands to execute the engine, e.g., `["saver ...", "cp ..."]`,
     all commands are joined with `;`, in other words, all commands are executed and the return code of the last command is returned.
-Note that, your dockerfile **MUST** gets the benchmark image as an argument and starts build from it, e.g.,
+Note that, your dockerfile **MUST** get the benchmark image as an argument and build from it, e.g.,
 
 ```dockerfile
 ARG BENCHMARK_IMAGE
